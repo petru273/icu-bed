@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ICU Room Map</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .room-container {
+      margin-bottom: 30px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #fff;
+    }
+    .room-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    .bed-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .bed {
+      flex: 1 0 80px;
+      border: 2px solid #333;
+      padding: 15px;
+      text-align: center;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      border-radius: 4px;
+      height: 80px;
+      position: relative;
+    }
+    .bed:hover {
+      background-color: #e0ffe0;
+    }
+    .bed[data-status="infected"] {
+      background-color: #ffcccc;
+      border-color: red;
+    }
+    .result {
+      font-size: 12px;
+      margin-top: 5px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+<h1>ICU Room & Bed Map</h1>
+<p style="text-align: center;">Click a bed to enter bacteriological results</p>
+
+<div id="icu-map"></div>
+
+<script>
+  const rooms = {
+    "Room 1": 1,
+    "Room 2": 3,
+    "Room 3": 4,
+    "Room 4": 4,
+    "Room 5": 4,
+    "Room 6": 4,
+    "Room 7": 1,
+    "Room 8": 3,
+    "Room 9": 4,
+    "Room 10": 2
+  };
+
+  const icuMap = document.getElementById("icu-map");
+
+  for (const [roomName, bedCount] of Object.entries(rooms)) {
+    const roomDiv = document.createElement("div");
+    roomDiv.className = "room-container";
+
+    const title = document.createElement("div");
+    title.className = "room-title";
+    title.textContent = `${roomName} (${bedCount} bed${bedCount > 1 ? 's' : ''})`;
+
+    const bedGrid = document.createElement("div");
+    bedGrid.className = "bed-grid";
+
+    for (let i = 1; i <= bedCount; i++) {
+      const bed = document.createElement("div");
+      bed.className = "bed";
+      bed.setAttribute("data-bed-id", `${roomName}-Bed${i}`);
+
+      bed.innerHTML = `<strong>Bed ${i}</strong><div class="result">No result</div>`;
+
+      bed.addEventListener("click", () => {
+        const input = prompt(`Enter bacteriological result for ${roomName}, Bed ${i}:`);
+        if (input !== null) {
+          const resultEl = bed.querySelector(".result");
+          resultEl.textContent = input;
+
+          if (input.toLowerCase().includes("positive") || input.toLowerCase().includes("infection")) {
+            bed.setAttribute("data-status", "infected");
+          } else {
+            bed.removeAttribute("data-status");
+          }
+        }
+      });
+
+      bedGrid.appendChild(bed);
+    }
+
+    roomDiv.appendChild(title);
+    roomDiv.appendChild(bedGrid);
+    icuMap.appendChild(roomDiv);
+  }
+</script>
+
+</body>
+</html>
