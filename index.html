@@ -19,6 +19,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
+      justify-content: center;
     }
 
     .room {
@@ -73,26 +74,29 @@
 <div class="room-container" id="rooms"></div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbyAnNLgfM2svGTxyeBZuOL46sQDVykS4GxyKvsDiUz3d-4-Q4sVOAvStFh81nNP45oLeQ/exec";
+  const API_BASE = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_URL/exec"; // ← Replace this with your deployed script URL
 
-  const ROOMS = ["ICU-1", "COVID-2", "Emergency"]; // update these to match sheet tabs
+  const ROOMS = ["Room 1", "Room 2"]; // ← Update these to match your sheet tabs
 
   const roomsContainer = document.getElementById("rooms");
 
-  ROOMS.forEach(room => {
-    loadRoom(room);
-  });
+  // Auto-load all rooms on page load
+  window.onload = () => {
+    ROOMS.forEach(room => {
+      loadRoom(room);
+    });
+  };
 
   function loadRoom(room) {
-    fetch(`${API_BASE}?room=${room}`)
+    fetch(`${API_BASE}?room=${encodeURIComponent(room)}`)
       .then(async res => {
         const text = await res.text();
         try {
           const data = JSON.parse(text);
-          if (data.error) throw data.error;
+          if (data.error) throw new Error(data.error);
           renderRoom(room, data);
         } catch (err) {
-          renderRoom(room, { error: err });
+          renderRoom(room, { error: err.message });
         }
       });
   }
@@ -151,7 +155,7 @@
       body: JSON.stringify({ room, bed_id: bedId, status, notes, background }),
       headers: { "Content-Type": "application/json" }
     }).then(res => res.text())
-      .then(r => {
+      .then(() => {
         btn.innerText = "✅ Saved";
         setTimeout(() => btn.innerText = "💾 Save", 1500);
       });
