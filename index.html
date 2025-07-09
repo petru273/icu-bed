@@ -54,11 +54,16 @@
     function loadRoom() {
       const room = roomSelect.value;
       fetch(`${API_BASE}?room=${room}`)
-        .then(res => res.json())
-        .then(data => {
+      .then(async res => {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
           roomInfo.innerHTML = `<h3>${room}</h3><p>${data.config.description}</p><p>Total Beds: ${data.config.beds_count}</p>`;
           renderBeds(room, data.beds);
-        });
+        } catch (err) {
+          alert("Error loading room: " + text);
+        }
+      });
     }
 
     function renderBeds(room, beds) {
