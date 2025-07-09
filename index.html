@@ -26,16 +26,28 @@
     .room {
       background: white;
       border: 1px solid #ccc;
-      padding: 10px;
       border-radius: 8px;
       width: 300px;
       flex: 1 1 300px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
 
-    .room h3 {
-      margin-top: 0;
-      color: #333;
+    .room-header {
+      cursor: pointer;
+      background: #eee;
+      padding: 10px;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .room-content {
+      display: none;
+      padding: 10px;
+    }
+
+    .room-content p {
+      margin: 4px 0;
     }
 
     .bed {
@@ -75,7 +87,7 @@
 <div class="room-container" id="rooms"></div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbwE_mEUM1nWwNAKZFMP_M_5ERIS-rs0kpUT7FnMFL_kJcG7j2yXT8GIP1rAPt80oW7usw/exec"; // ← Replace this
+  const API_BASE = "https://script.google.com/macros/s/AKfycbwE_mEUM1nWwNAKZFMP_M_5ERIS-rs0kpUT7FnMFL_kJcG7j2yXT8GIP1rAPt80oW7usw/exec";
 
   const roomsContainer = document.getElementById("rooms");
 
@@ -112,17 +124,27 @@
     const roomDiv = document.createElement("div");
     roomDiv.className = "room";
 
+    const header = document.createElement("div");
+    header.className = "room-header";
+    header.innerText = name;
+    header.onclick = () => {
+      content.style.display = content.style.display === "none" ? "block" : "none";
+    };
+
+    const content = document.createElement("div");
+    content.className = "room-content";
+    content.style.display = "none"; // collapsed by default
+
     if (data.error) {
-      roomDiv.innerHTML = `<h3>${name}</h3><p class="error">${data.error}</p>`;
+      content.innerHTML = `<p class="error">${data.error}</p>`;
     } else {
-      roomDiv.innerHTML = `
-        <h3>${name}</h3>
+      content.innerHTML = `
         <p>${data.config.description || ""}</p>
         <p><strong>Total Beds:</strong> ${data.config.beds_count}</p>
         <div class="beds"></div>
       `;
 
-      const bedsDiv = roomDiv.querySelector(".beds");
+      const bedsDiv = content.querySelector(".beds");
       data.beds.forEach(bed => {
         const div = document.createElement("div");
         div.className = "bed";
@@ -146,6 +168,8 @@
       });
     }
 
+    roomDiv.appendChild(header);
+    roomDiv.appendChild(content);
     roomsContainer.appendChild(roomDiv);
   }
 
@@ -170,16 +194,18 @@
 
   function clearBed(room, bedId, btn) {
     const parent = btn.parentElement;
-    parent.children[1].value = "";
-    parent.children[2].value = "";
-    parent.children[3].value = "";
+    parent.children[1].value = "Empty"; // status
+    parent.children[2].value = ""; // notes
+    parent.children[3].value = "green"; // background
+    parent.style.borderLeftColor = "green";
     saveBed(room, bedId, btn);
   }
+
   function handleNoteChange(input) {
     const parent = input.parentElement;
-    const statusInput = parent.children[1]; // Status input
+    const statusInput = parent.children[1];
     const notesInput = input;
-    const select = parent.children[3]; // Background selector
+    const select = parent.children[3];
 
     if (notesInput.value.trim() !== "") {
       statusInput.value = "Occupied";
