@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>ICU Bed Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:,">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -66,7 +67,6 @@
       font-weight: bold;
     }
   </style>
-  <link rel="icon" href="data:,">
 </head>
 <body>
 
@@ -75,7 +75,7 @@
 <div class="room-container" id="rooms"></div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbw83dwEXPRygzQoyynci-jqK4jkDJQWlxn8c3OEw4OgM0cLimOGXCEiD5axBwp5S7nOLQ/exec"; // ← Replace this
+  const API_BASE = "https://script.google.com/macros/s/AKfycbwE_mEUM1nWwNAKZFMP_M_5ERIS-rs0kpUT7FnMFL_kJcG7j2yXT8GIP1rAPt80oW7usw/exec"; // ← Replace this
 
   const roomsContainer = document.getElementById("rooms");
 
@@ -130,8 +130,9 @@
 
         div.innerHTML = `
           <strong>Bed ${bed.bed_id}</strong>
-          <input type="text" value="${bed.status || ''}" placeholder="Status" />
-          <input type="text" value="${bed.notes || ''}" placeholder="Notes" />
+          <input type="text" value="${bed.status || ''}" placeholder="Status" readonly />
+          <input type="text" value="${bed.notes || ''}" placeholder="Notes" oninput="handleNoteChange(this)" />
+          <select>
           <select>
             <option value="">None</option>
             <option value="green" ${bed.background === 'green' ? 'selected' : ''}>Green</option>
@@ -174,6 +175,22 @@
     parent.children[2].value = "";
     parent.children[3].value = "";
     saveBed(room, bedId, btn);
+  }
+  function handleNoteChange(input) {
+    const parent = input.parentElement;
+    const statusInput = parent.children[1]; // Status input
+    const notesInput = input;
+    const select = parent.children[3]; // Background selector
+
+    if (notesInput.value.trim() !== "") {
+      statusInput.value = "Occupied";
+      select.value = "red";
+      parent.style.borderLeftColor = "red";
+    } else {
+      statusInput.value = "Empty";
+      select.value = "green";
+      parent.style.borderLeftColor = "green";
+    }
   }
 </script>
 
