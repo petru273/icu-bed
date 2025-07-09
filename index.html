@@ -1,118 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
   <title>ICU Bed Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f9f9f9;
-    }
-
-    h1 {
-      text-align: center;
-    }
-
-    .room-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-
-    .room {
-      background: white;
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 8px;
-      width: 300px;
-      flex: 1 1 300px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .room h3 {
-      margin-top: 0;
-      color: #333;
-    }
-
+    body { font-family: Arial; padding: 20px; }
     .bed {
       display: flex;
-      flex-direction: column;
-      border: 2px solid transparent;
-      border-left: 10px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-      background: #f0f0f0;
-      border-radius: 5px;
+      gap: 10px;
+      padding: 8px;
+      margin-bottom: 5px;
+      border: 1px solid #ccc;
+      border-left: 8px solid;
+      align-items: center;
     }
-
     .bed input, .bed select {
-      margin-top: 5px;
-      padding: 4px;
-      font-size: 14px;
+      padding: 5px;
     }
-
-    .bed button {
-      margin-top: 5px;
-      font-size: 13px;
-      padding: 5px 8px;
-      cursor: pointer;
-    }
-
-    .error {
-      color: red;
-      font-weight: bold;
+    .room-selector {
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
 
-<h1>🏥 ICU Bed Tracker</h1>
+  <h2>🏥 ICU Bed Tracker</h2>
 
-<div class="room-container" id="rooms"></div>
+  <div class="room-selector">
+    <label>Select Room:
+      <select id="roomSelect"></select>
+    </label>
+    <button onclick="loadRoom()">Load Room</button>
+  </div>
 
-<script>
-  const API_BASE = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_URL/exec";
+  <div id="roomInfo"></div>
+  <div id="bedList"></div>
 
-  const ROOMS = ["ICU-1", "COVID-2", "Emergency"]; // update these to match sheet tabs
+  <script>
+    const API_BASE = "https://script.google.com/macros/s/AKfycbyAnNLgfM2svGTxyeBZuOL46sQDVykS4GxyKvsDiUz3d-4-Q4sVOAvStFh81nNP45oLeQ/exec";
 
-  const roomsContainer = document.getElementById("rooms");
+    const ROOMS = ["ICU-1", "COVID-2", "Emergency"]; // hardcoded list for now
 
-  ROOMS.forEach(room => {
-    loadRoom(room);
-  });
+    const roomSelect = document.getElementById("roomSelect");
+    const roomInfo = document.getElementById("roomInfo");
+    const bedList = document.getElementById("bedList");
 
-  function loadRoom(room) {
-    fetch(`${API_BASE}?room=${room}`)
-      .then(async res => {
-        const text = await res.text();
-        try {
-          const data = JSON.parse(text);
-          if (data.error) throw data.error;
-          renderRoom(room, data);
-        } catch (err) {
-          renderRoom(room, { error: err });
-        }
-      });
-  }
+    ROOMS.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r; opt.text = r;
+      roomSelect.appendChild(opt);
+    });
 
-  function renderRoom(name, data) {
-    const roomDiv = document.createElement("div");
-    roomDiv.className = "room";
+    function loadRoom() {
+      const room = roomSelect.value;
+      fetch(`${API_BASE}?room=${room}`)
+        .then(res => res.json())
+        .then(data => {
+          roomInfo.innerHTML = `<h3>${room}</h3><p>${data.config.description}</p><p>Total Beds: ${data.config.beds_count}</p>`;
+          renderBeds(room, data.beds);
+        });
+    }
 
-    if (data.error) {
-      roomDiv.innerHTML = `<h3>${name}</h3><p class="error">${data.error}</p>`;
-    } else {
-      roomDiv.innerHTML = `
-        <h3>${name}</h3>
-        <p>${data.config.description || ""}</p>
-        <p><strong>Total Beds:</strong> ${data.config.beds_count}</p>
-        <div class="beds"></div>
-      `;
-
-      const bedsDiv = roomDiv.querySelector(".beds");
-      data.beds.forEach(bed => {
+    function renderBeds(room, beds) {
+      bedList.innerHTML = "";
+      beds.forEach(bed => {
         const div = document.createElement("div");
         div.className = "bed";
         div.style.borderLeftColor = bed.background || "#ccc";
@@ -127,44 +78,35 @@
             <option value="yellow" ${bed.background === 'yellow' ? 'selected' : ''}>Yellow</option>
             <option value="red" ${bed.background === 'red' ? 'selected' : ''}>Red</option>
           </select>
-          <button onclick="saveBed('${name}', ${bed.bed_id}, this)">💾 Save</button>
-          <button onclick="clearBed('${name}', ${bed.bed_id}, this)">❌ Clear</button>
+          <button onclick="saveBed('${room}', ${bed.bed_id}, this)">💾 Save</button>
+          <button onclick="clearBed('${room}', ${bed.bed_id}, this)">❌ Clear</button>
         `;
-
-        bedsDiv.appendChild(div);
+        bedList.appendChild(div);
       });
     }
 
-    roomsContainer.appendChild(roomDiv);
-  }
+    function saveBed(room, bedId, btn) {
+      const parent = btn.parentElement;
+      const status = parent.children[1].value;
+      const notes = parent.children[2].value;
+      const background = parent.children[3].value;
 
-  function saveBed(room, bedId, btn) {
-    const parent = btn.parentElement;
-    const status = parent.children[1].value;
-    const notes = parent.children[2].value;
-    const background = parent.children[3].value;
+      fetch(API_BASE, {
+        method: "POST",
+        body: JSON.stringify({ room, bed_id: bedId, status, notes, background }),
+        headers: { "Content-Type": "application/json" }
+      }).then(res => res.text())
+        .then(r => alert("Saved"));
+    }
 
-    parent.style.borderLeftColor = background || "#ccc";
-
-    fetch(API_BASE, {
-      method: "POST",
-      body: JSON.stringify({ room, bed_id: bedId, status, notes, background }),
-      headers: { "Content-Type": "application/json" }
-    }).then(res => res.text())
-      .then(r => {
-        btn.innerText = "✅ Saved";
-        setTimeout(() => btn.innerText = "💾 Save", 1500);
-      });
-  }
-
-  function clearBed(room, bedId, btn) {
-    const parent = btn.parentElement;
-    parent.children[1].value = "";
-    parent.children[2].value = "";
-    parent.children[3].value = "";
-    saveBed(room, bedId, btn);
-  }
-</script>
+    function clearBed(room, bedId, btn) {
+      const parent = btn.parentElement;
+      parent.children[1].value = "";
+      parent.children[2].value = "";
+      parent.children[3].value = "";
+      saveBed(room, bedId, btn);
+    }
+  </script>
 
 </body>
 </html>
