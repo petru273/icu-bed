@@ -133,7 +133,6 @@
           <input type="text" value="${bed.status || ''}" placeholder="Status" readonly />
           <input type="text" value="${bed.notes || ''}" placeholder="Notes" oninput="handleNoteChange(this)" />
           <select>
-          <select>
             <option value="">None</option>
             <option value="green" ${bed.background === 'green' ? 'selected' : ''}>Green</option>
             <option value="yellow" ${bed.background === 'yellow' ? 'selected' : ''}>Yellow</option>
