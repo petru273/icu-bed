@@ -74,17 +74,23 @@
 <div class="room-container" id="rooms"></div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_URL/exec"; // ← Replace this with your deployed script URL
-
-  const ROOMS = ["Room 1", "Room 2"]; // ← Update these to match your sheet tabs
+  const API_BASE = "https://script.google.com/macros/s/AKfycbzW5ei8bZl0najcIVX4YCoKF8XXQvD5gMEjiH5TZ4fDIgX0hD_z1QT9wnAx76Y4GoZHqQ/exec"; // ← Replace this
 
   const roomsContainer = document.getElementById("rooms");
 
-  // Auto-load all rooms on page load
-  window.onload = () => {
-    ROOMS.forEach(room => {
-      loadRoom(room);
-    });
+  window.onload = async () => {
+    try {
+      const res = await fetch(`${API_BASE}?list_rooms=true`);
+      const text = await res.text();
+      const json = JSON.parse(text);
+      if (json.rooms && Array.isArray(json.rooms)) {
+        json.rooms.forEach(room => loadRoom(room));
+      } else {
+        console.error("No room list found.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch room list:", err);
+    }
   };
 
   function loadRoom(room) {
