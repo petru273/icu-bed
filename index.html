@@ -1,121 +1,168 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>ICU Room Map</title>
+  <title>ICU Bed Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f9f9f9;
+      margin: 20px;
+      background: #f9f9f9;
     }
+
     h1 {
       text-align: center;
-      margin-bottom: 30px;
     }
+
     .room-container {
-      margin-bottom: 30px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      background-color: #fff;
-    }
-    .room-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-      font-size: 18px;
-    }
-    .bed-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 20px;
     }
+
+    .room {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      width: 300px;
+      flex: 1 1 300px;
+      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .room h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
     .bed {
-      flex: 1 0 80px;
-      border: 2px solid #333;
-      padding: 15px;
-      text-align: center;
-      background-color: #f0f0f0;
-      cursor: pointer;
-      border-radius: 4px;
-      height: 80px;
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid transparent;
+      border-left: 10px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #f0f0f0;
+      border-radius: 5px;
     }
-    .bed:hover {
-      background-color: #e0ffe0;
-    }
-    .bed[data-status="infected"] {
-      background-color: #ffcccc;
-      border-color: red;
-    }
-    .result {
-      font-size: 12px;
+
+    .bed input, .bed select {
       margin-top: 5px;
-      color: #444;
+      padding: 4px;
+      font-size: 14px;
+    }
+
+    .bed button {
+      margin-top: 5px;
+      font-size: 13px;
+      padding: 5px 8px;
+      cursor: pointer;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-<h1>ICU Room & Bed Map</h1>
-<p style="text-align: center;">Click a bed to enter bacteriological results</p>
+<h1>🏥 ICU Bed Tracker</h1>
 
-<div id="icu-map"></div>
+<div class="room-container" id="rooms"></div>
 
 <script>
-  const rooms = {
-    "Room 1": 1,
-    "Room 2": 3,
-    "Room 3": 4,
-    "Room 4": 4,
-    "Room 5": 4,
-    "Room 6": 4,
-    "Room 7": 1,
-    "Room 8": 3,
-    "Room 9": 4,
-    "Room 10": 2
-  };
+  const API_BASE = "https://script.google.com/macros/s/YOUR_DEPLOYED_SCRIPT_URL/exec";
 
-  const icuMap = document.getElementById("icu-map");
+  const ROOMS = ["ICU-1", "COVID-2", "Emergency"]; // update these to match sheet tabs
 
-  for (const [roomName, bedCount] of Object.entries(rooms)) {
-    const roomDiv = document.createElement("div");
-    roomDiv.className = "room-container";
+  const roomsContainer = document.getElementById("rooms");
 
-    const title = document.createElement("div");
-    title.className = "room-title";
-    title.textContent = `${roomName} (${bedCount} bed${bedCount > 1 ? 's' : ''})`;
+  ROOMS.forEach(room => {
+    loadRoom(room);
+  });
 
-    const bedGrid = document.createElement("div");
-    bedGrid.className = "bed-grid";
-
-    for (let i = 1; i <= bedCount; i++) {
-      const bed = document.createElement("div");
-      bed.className = "bed";
-      bed.setAttribute("data-bed-id", `${roomName}-Bed${i}`);
-
-      bed.innerHTML = `<strong>Bed ${i}</strong><div class="result">No result</div>`;
-
-      bed.addEventListener("click", () => {
-        const input = prompt(`Enter bacteriological result for ${roomName}, Bed ${i}:`);
-        if (input !== null) {
-          const resultEl = bed.querySelector(".result");
-          resultEl.textContent = input;
-
-          if (input.toLowerCase().includes("positive") || input.toLowerCase().includes("infection")) {
-            bed.setAttribute("data-status", "infected");
-          } else {
-            bed.removeAttribute("data-status");
-          }
+  function loadRoom(room) {
+    fetch(`${API_BASE}?room=${room}`)
+      .then(async res => {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.error) throw data.error;
+          renderRoom(room, data);
+        } catch (err) {
+          renderRoom(room, { error: err });
         }
       });
+  }
 
-      bedGrid.appendChild(bed);
+  function renderRoom(name, data) {
+    const roomDiv = document.createElement("div");
+    roomDiv.className = "room";
+
+    if (data.error) {
+      roomDiv.innerHTML = `<h3>${name}</h3><p class="error">${data.error}</p>`;
+    } else {
+      roomDiv.innerHTML = `
+        <h3>${name}</h3>
+        <p>${data.config.description || ""}</p>
+        <p><strong>Total Beds:</strong> ${data.config.beds_count}</p>
+        <div class="beds"></div>
+      `;
+
+      const bedsDiv = roomDiv.querySelector(".beds");
+      data.beds.forEach(bed => {
+        const div = document.createElement("div");
+        div.className = "bed";
+        div.style.borderLeftColor = bed.background || "#ccc";
+
+        div.innerHTML = `
+          <strong>Bed ${bed.bed_id}</strong>
+          <input type="text" value="${bed.status || ''}" placeholder="Status" />
+          <input type="text" value="${bed.notes || ''}" placeholder="Notes" />
+          <select>
+            <option value="">None</option>
+            <option value="green" ${bed.background === 'green' ? 'selected' : ''}>Green</option>
+            <option value="yellow" ${bed.background === 'yellow' ? 'selected' : ''}>Yellow</option>
+            <option value="red" ${bed.background === 'red' ? 'selected' : ''}>Red</option>
+          </select>
+          <button onclick="saveBed('${name}', ${bed.bed_id}, this)">💾 Save</button>
+          <button onclick="clearBed('${name}', ${bed.bed_id}, this)">❌ Clear</button>
+        `;
+
+        bedsDiv.appendChild(div);
+      });
     }
 
-    roomDiv.appendChild(title);
-    roomDiv.appendChild(bedGrid);
-    icuMap.appendChild(roomDiv);
+    roomsContainer.appendChild(roomDiv);
+  }
+
+  function saveBed(room, bedId, btn) {
+    const parent = btn.parentElement;
+    const status = parent.children[1].value;
+    const notes = parent.children[2].value;
+    const background = parent.children[3].value;
+
+    parent.style.borderLeftColor = background || "#ccc";
+
+    fetch(API_BASE, {
+      method: "POST",
+      body: JSON.stringify({ room, bed_id: bedId, status, notes, background }),
+      headers: { "Content-Type": "application/json" }
+    }).then(res => res.text())
+      .then(r => {
+        btn.innerText = "✅ Saved";
+        setTimeout(() => btn.innerText = "💾 Save", 1500);
+      });
+  }
+
+  function clearBed(room, bedId, btn) {
+    const parent = btn.parentElement;
+    parent.children[1].value = "";
+    parent.children[2].value = "";
+    parent.children[3].value = "";
+    saveBed(room, bedId, btn);
   }
 </script>
 
