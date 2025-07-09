@@ -87,7 +87,7 @@
 <div class="room-container" id="rooms"></div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbwE_mEUM1nWwNAKZFMP_M_5ERIS-rs0kpUT7FnMFL_kJcG7j2yXT8GIP1rAPt80oW7usw/exec";
+  const API_BASE = "https://script.google.com/macros/s/AKfycbx9rz8tjhauF3PDoMJmUidHlkiBM4MxA6z0Uu_myGMnxlcJ_UxoBNsZbM0nnRy92MvAVA/exec";
 
   const roomsContainer = document.getElementById("rooms");
 
@@ -152,7 +152,7 @@
 
         div.innerHTML = `
           <strong>Bed ${bed.bed_id}</strong>
-          <input type="text" value="${bed.status || ''}" placeholder="Status" readonly />
+          <input type="text" value="${bed.status || ''}" placeholder="Status" readonly disabled />
           <input type="text" value="${bed.notes || ''}" placeholder="Notes" oninput="handleNoteChange(this)" />
           <select>
             <option value="">None</option>
