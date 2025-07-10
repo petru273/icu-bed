@@ -44,6 +44,7 @@
     </div>
     <button onclick="verifyPassword()">Login</button>
     <button onclick="document.getElementById('adminModal').style.display='none'">Close</button>
+    <button onclick="logoutAdmin()">Logout</button>
   </div>
 </div>
 
@@ -62,19 +63,31 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let isAdmin = false;
-
+  
+if (localStorage.getItem("isAdmin") === "true") {
+  isAdmin = true;
+}
+  
 function verifyPassword() {
   const input = document.getElementById("adminPassInput").value;
   db.collection("config").doc("admin").get().then(doc => {
     if (input === doc.data()?.password) {
       isAdmin = true;
+      localStorage.setItem("isAdmin", "true");
       document.getElementById("adminActions").style.display = "block";
-      alert("✅ Access granted");
+      document.getElementById("adminModal").style.display = "none";
+      location.reload();
+      // alert("✅ Access granted");
       location.reload();
     } else alert("❌ Wrong password");
   });
 }
-
+  
+function logoutAdmin() {
+  localStorage.removeItem("isAdmin");
+  location.reload();
+}
+  
 function loadRooms() {
   db.collection("rooms").get().then(snapshot => {
     snapshot.forEach(doc => {
