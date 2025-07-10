@@ -286,19 +286,31 @@ function renderRoom(roomId, desc, beds) {
     bedDiv.className = "bed";
     bedDiv.style.borderLeftColor = bed.color || "#ccc";
     bedDiv.innerHTML = `
-      ${isAdmin ? `<span onclick="removeBed('${roomId}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
-      <strong>Bed ${index + 1}</strong>
-      <input value="${bed.status || 'Empty'}" readonly disabled />
-      <input value="${bed.notes || ''}" placeholder="Notes" oninput="noteChanged(this)">
-      <select onchange="colorChanged(this)">
+    ${isAdmin ? `<span onclick="removeBed('${roomId}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
+    <strong class="bed-title">Bed ${index + 1}</strong>
+    <div class="bed-field">
+        <label>Status:</label>
+        <input value="${bed.status || 'Empty'}" readonly disabled />
+    </div>
+    <div class="bed-field">
+        <label>Notes:</label>
+        <input value="${bed.notes || ''}" placeholder="Notes" oninput="noteChanged(this)">
+    </div>
+    <div class="bed-field">
+        <label>Color:</label>
+        <select onchange="colorChanged(this)">
         <option value="">None</option>
         <option value="green" ${bed.color === "green" ? "selected" : ""}>Green</option>
         <option value="yellow" ${bed.color === "yellow" ? "selected" : ""}>Yellow</option>
         <option value="red" ${bed.color === "red" ? "selected" : ""}>Red</option>
-      </select>
-      <button onclick="saveBed('${roomId}', '${bed.id}', this)">💾 Save</button>
-      <button onclick="clearBed('${roomId}', '${bed.id}', this)">❌ Clear</button>
+        </select>
+    </div>
+    <div style="display: flex; gap: 10%; justify-content: center; width: 90%; margin-top: 10px;">
+        <button style="flex: 1;" onclick="saveBed('${roomId}', '${bed.id}', this)">💾 Save</button>
+        <button style="flex: 1; background: #dc3545;" onclick="clearBed('${roomId}', '${bed.id}', this)">❌ Clear</button>
+    </div>
     `;
+
     content.appendChild(bedDiv);
   });
 
@@ -447,7 +459,7 @@ function clearBed(roomId, bedId, btn) {
   db.collection("rooms").doc(roomId).collection("beds").doc(bedId).update({
     status: "Empty",
     notes: "",
-    color: "green"
+    color: "none"
   }).then(() => {
     toast("✅ Bed cleared");
 
