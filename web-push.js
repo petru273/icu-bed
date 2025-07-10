@@ -3,28 +3,42 @@
 if (!firebase || !firebase.messaging) {
   throw new Error("Firebase and Messaging SDK must be loaded before this file!");
 }
+
 const messaging = firebase.messaging();
 
-// Must be called after user gesture, e.g., button click or on load if you want to prompt immediately.
 function subscribeForPushNotifications() {
-  if (Notification.permission === "granted") {
-    getTokenAndSave();
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then(permission => {
-      if (permission === "granted") {
-        getTokenAndSave();
-      } else {
-        alert("Notifications are blocked.");
-      }
-    });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('firebase-messaging-sw.js')
+      .then(function(registration) {
+        console.log('Service Worker registered with scope:', registration.scope);
+
+        // Now prompt for notification permission
+        if (Notification.permission === "granted") {
+          getTokenAndSave(registration);
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+              getTokenAndSave(registration);
+            } else {
+              alert("Notifications are blocked.");
+            }
+          });
+        } else {
+          alert("Notifications are blocked in your browser settings.");
+        }
+
+      }).catch(function(err) {
+        console.error("Service Worker registration failed:", err);
+      });
   } else {
-    alert("Notifications are blocked in your browser settings.");
+    alert("Service workers are not supported in this browser.");
   }
 }
 
-function getTokenAndSave() {
+function getTokenAndSave(registration) {
   messaging.getToken({
-    vapidKey: 'BAUZnuNjH_QWiWcumNwqtFZtjkd7BasgXQvFufDmZTgw_QnfyzneF8XHc0wuS5MRvrdSQUAZ2brKtD3qiMMq5ZI' 
+    vapidKey: 'BAUZnuNjH_QWiWcumNwqtFZtjkd7BasgXQvFufDmZTgw_QnfyzneF8XHc0wuS5MRvrdSQUAZ2brKtD3qiMMq5ZI',
+    serviceWorkerRegistration: registration
   }).then((currentToken) => {
     if (currentToken) {
       console.log("Notification token:", currentToken);
@@ -37,5 +51,4 @@ function getTokenAndSave() {
   });
 }
 
-// Export if needed
 window.subscribeForPushNotifications = subscribeForPushNotifications;
