@@ -227,28 +227,43 @@ function logoutAdmin() {
 }
 
 function listenToRoomChanges() {
-  db.collection("rooms").orderBy("name").onSnapshot(snapshot => {
-    snapshot.forEach(roomDoc => {
-      const roomId = roomDoc.id;
-      const roomData = roomDoc.data();
+  db.collection("rooms")
+    .orderBy("name")
+    .onSnapshot(snapshot => {
+      const seen = new Set();
+      snapshot.forEach(roomDoc => {
+        const roomId = roomDoc.id;
+        const roomData = roomDoc.data();
+        seen.add(roomId);
 
-      db.collection("rooms").doc(roomId).collection("beds")
-        .orderBy("created_at", "asc")
-        .onSnapshot(bedsSnapshot => {
-          const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          renderRoom(roomId, roomData.description, beds);
-        });
+        db.collection("rooms").doc(roomId).collection("beds")
+          .orderBy("created_at", "asc")
+          .onSnapshot(bedsSnapshot => {
+            const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderRoom(roomId, roomData.description, beds);
+          });
+      });
+
+      // Remove rooms that no longer exist
+      const allRoomDivs = document.querySelectorAll(".room");
+      allRoomDivs.forEach(div => {
+        if (!seen.has(div.dataset.roomId)) div.remove();
+      });
     });
-  });
 }
 
 function renderRoom(name, desc, beds) {
+  const container = document.getElementById("rooms");
   const existing = document.getElementById(`room-${name}`);
   if (existing) existing.remove();
-  
+
   const div = document.createElement("div");
   div.className = "room";
-  const occupied = beds.filter(b => b.notes?.trim()).length;
+  div.id = `room-${name}`;
+  div.dataset.roomId = name;
+
+  const occupied = beds.filter(b => b.notes).length;
+
   div.innerHTML = `
     <div class="room-header" onclick="toggleRoom(this)">
       <span>${name}</span>
@@ -259,6 +274,7 @@ function renderRoom(name, desc, beds) {
       <p><strong>${beds.length}</strong> beds total — <strong>${occupied}</strong> occupied</p>
     </div>
   `;
+
   const content = div.querySelector(".room-content");
   beds.forEach((bed, index) => {
     const bedDiv = document.createElement("div");
@@ -271,9 +287,9 @@ function renderRoom(name, desc, beds) {
       <input value="${bed.notes || ''}" placeholder="Notes" oninput="noteChanged(this)">
       <select onchange="colorChanged(this)">
         <option value="">None</option>
-        <option value="green" ${bed.color === "green" ? 'selected' : ''}>Green</option>
-        <option value="yellow" ${bed.color === "yellow" ? 'selected' : ''}>Yellow</option>
-        <option value="red" ${bed.color === "red" ? 'selected' : ''}>Red</option>
+        <option value="green" ${bed.color === "green" ? "selected" : ""}>Green</option>
+        <option value="yellow" ${bed.color === "yellow" ? "selected" : ""}>Yellow</option>
+        <option value="red" ${bed.color === "red" ? "selected" : ""}>Red</option>
       </select>
       <button onclick="saveBed('${name}', '${bed.id}', this)">💾 Save</button>
       <button onclick="clearBed('${name}', '${bed.id}', this)">❌ Clear</button>
@@ -291,7 +307,7 @@ function renderRoom(name, desc, beds) {
     content.appendChild(btnBox);
   }
 
-  document.getElementById("rooms").appendChild(div);
+  container.appendChild(div);
 }
 
 function toggleRoom(headerEl) {
