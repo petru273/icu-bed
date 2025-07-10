@@ -112,6 +112,17 @@ function renderRoom(name, desc, beds) {
     `;
     content.appendChild(bedDiv);
   });
+  if (isAdmin) {
+  const addBtn = document.createElement("button");
+  addBtn.textContent = "➕ Add Bed";
+  addBtn.onclick = () => addBed(roomName);
+  content.appendChild(addBtn);
+
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "❌ Remove Last Bed";
+  delBtn.onclick = () => removeLastBed(roomName);
+  content.appendChild(delBtn);
+}
   document.getElementById("rooms").appendChild(div);
 }
 
@@ -174,6 +185,43 @@ function deleteRoom() {
     const deletions = snapshot.docs.map(doc => doc.ref.delete());
     return Promise.all(deletions);
   }).then(() => db.collection("rooms").doc(name).delete()).then(() => location.reload());
+}
+
+function addBed(roomName) {
+  if (!isAdmin) return alert("Admin only");
+  const roomRef = db.collection("rooms").doc(roomName);
+  const bedsRef = roomRef.collection("beds");
+
+  // Add default bed
+  bedsRef.add({
+    status: "Empty",
+    notes: "",
+    color: "green"
+  }).then(() => {
+    return roomRef.get();
+  }).then(doc => {
+    const currentCount = doc.data().beds_count || 0;
+    return roomRef.update({ beds_count: currentCount + 1 });
+  }).then(() => location.reload());
+}
+
+function removeLastBed(roomName) {
+  if (!isAdmin) return alert("Admin only");
+  if (!confirm("Remove the last bed from this room?")) return;
+
+  const roomRef = db.collection("rooms").doc(roomName);
+  const bedsRef = roomRef.collection("beds");
+
+  bedsRef.orderBy(firebase.firestore.FieldPath.documentId()).limitToLast(1).get()
+    .then(snapshot => {
+      if (!snapshot.empty) {
+        const lastBedDoc = snapshot.docs[0];
+        return lastBedDoc.ref.delete().then(() => roomRef.get());
+      }
+    }).then(doc => {
+      const currentCount = doc.data().beds_count || 1;
+      return roomRef.update({ beds_count: currentCount - 1 });
+    }).then(() => location.reload());
 }
 
 window.onload = loadRooms;
