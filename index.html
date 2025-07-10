@@ -92,9 +92,8 @@ function verifyPassword() {
       localStorage.setItem("isAdmin", "true");
       document.getElementById("adminActions").style.display = "block";
       document.getElementById("adminModal").style.display = "none";
-    } else {
-      document.getElementById("nonAdminActions").style.display = "block";
       document.getElementById("nonAdminActions").style.display = "none";
+    } else {
       alert("❌ Wrong password");
     }
   });
