@@ -299,16 +299,20 @@ function toggleRoom(headerEl) {
 
 function noteChanged(input) {
   const parent = input.parentElement;
-  const status = parent.children[1];
-  const color = parent.children[3];
+  const statusInput = parent.children[1];
+  const colorSelect = parent.children[3];
+
   parent.classList.add("changed");
+
   if (input.value.trim()) {
-    status.value = "Occupied";
-    color.value = "red";
-    parent.style.borderLeftColor = "red";
+    if (statusInput.value === "Empty") statusInput.value = "Occupied";
+    if (!colorSelect.value || colorSelect.value === "green") {
+      colorSelect.value = "red";
+      parent.style.borderLeftColor = "red";
+    }
   } else {
-    status.value = "Empty";
-    color.value = "green";
+    statusInput.value = "Empty";
+    colorSelect.value = "green";
     parent.style.borderLeftColor = "green";
   }
 }
