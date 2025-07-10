@@ -230,8 +230,13 @@ function saveBed(roomId, bedId, btn) {
 
 function clearBed(roomId, bedId) {
   if (!confirm("Clear this bed?")) return;
-  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({ status: "Empty", notes: "", color: "green" })
-    .then(() => toast("✅ Bed cleared"));
+  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({ 
+    status: "Empty", 
+    notes: "", 
+    color: "green" 
+  }).then(() => {
+    showToast("✅ Bed cleared!");
+  });
 }
 
 function addRoom() {
@@ -281,8 +286,22 @@ function addBed(roomName) {
     return roomRef.update({ beds_count: currentCount + 1 });
   }).then(() => toast("✅ Bed added"));
 }
-
-window.onload = loadRooms;
+function listenToRoomChanges() {
+  db.collection("rooms").onSnapshot(snapshot => {
+    document.getElementById("rooms").innerHTML = ""; // Clear all
+    snapshot.forEach(roomDoc => {
+      const roomId = roomDoc.id;
+      const roomData = roomDoc.data();
+      db.collection("rooms").doc(roomId).collection("beds")
+        .orderBy("created_at", "asc") // Optional: maintain bed order
+        .onSnapshot(bedsSnapshot => {
+          const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderRoom(roomId, roomData.description, beds);
+        });
+    });
+  });
+}
+window.onload = listenToRoomChanges;
 </script>
 </body>
 </html>
