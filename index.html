@@ -192,10 +192,19 @@ function removeBed(room) {
   }).then(() => location.reload());
 }
 
-function addRoom() {
+async function addRoom() {
   const name = document.getElementById("newRoomName").value.trim();
   if (!name) return alert("Enter room name");
-  db.collection("rooms").doc(name).set({ beds: [] }).then(() => location.reload());
+
+  const existing = await db.collection("rooms").doc(name).get();
+  if (existing.exists) {
+    return alert("Room already exists!");
+  }
+
+  await db.collection("rooms").doc(name).set({
+    beds: [{ status: "Empty", notes: "", color: "green" }]
+  });
+  location.reload();
 }
 
 function deleteRoom() {
