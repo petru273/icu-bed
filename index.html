@@ -331,42 +331,61 @@ function colorChanged(select) {
 
 function saveBed(roomId, bedId, btn) {
   const parent = btn.parentElement;
-  const status = parent.children[1].value;
-  const notes = parent.children[2].value;
-  const color = parent.children[3].value;
+  const notes = parent.querySelector("input[placeholder='Notes']").value;
+  const color = parent.querySelector("select").value;
+  const status = notes.trim() ? "Occupied" : "Empty";
 
-  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({ status, notes, color })
-    .then(() => {
-      toast("✅ Bed saved");
-      return db.collection("notifications").add({
-        type: "update",
-        roomId,
-        bedId,
-        notes,
-        color,
-        clientId,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
-}
-
-function clearBed(roomId, bedId) {
-  if (!confirm("Clear this bed?")) return;
-  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({ 
-    status: "Empty", 
-    notes: "", 
-    color: "green"
+  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({
+    status,
+    notes,
+    color
   }).then(() => {
-    toast("✅ Bed cleared");
+    toast("✅ Bed saved");
+
+    // Get bed index from UI
+    const bedTitle = parent.querySelector("strong")?.innerText || "";
+    const match = bedTitle.match(/Bed (\d+)/);
+    const bedIndex = match ? Number(match[1]) : null;
+
     return db.collection("notifications").add({
-      type: "clear",
+      type: "update",
       roomId,
       bedId,
+      bedIndex,
+      notes,
+      color,
       clientId,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
   });
 }
+
+function clearBed(roomId, bedId, btn) {
+  if (!confirm("Clear this bed?")) return;
+
+  const parent = btn.parentElement;
+  const bedTitle = parent.querySelector("strong")?.innerText || "";
+  const match = bedTitle.match(/Bed (\d+)/);
+  const bedIndex = match ? Number(match[1]) : null;
+
+  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).update({
+    status: "Empty",
+    notes: "",
+    color: "green"
+  }).then(() => {
+    toast("✅ Bed cleared");
+
+    return db.collection("notifications").add({
+      type: "clear",
+      roomId,
+      bedId,
+      bedIndex,
+      clientId,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+}
+  
 function addRoom() {
   const name = document.getElementById("newRoomName").value.trim();
   const desc = document.getElementById("newRoomDesc").value.trim();
@@ -422,16 +441,19 @@ function listenToNotifications() {
     .onSnapshot(snapshot => {
       snapshot.docChanges().forEach(change => {
         const notif = change.doc.data();
-        if (notif.clientId === clientId) return; // Ignore own notifications
+        if (notif.clientId === clientId) return; // Ignore self
+
+        const bedLabel = notif.bedIndex ? `Bed ${notif.bedIndex}` : `Bed`;
 
         if (notif.type === "clear") {
-          toast(`🛏️ Bed ${notif.bedId} in ${notif.roomId} was cleared.`);
+          toast(`🛏️ ${bedLabel} in ${notif.roomId} was cleared`);
         } else if (notif.type === "update") {
-          toast(`🛏️ Bed ${notif.bedId} in ${notif.roomId} was updated (${notif.notes || 'no notes'})`);
+          toast(`🛏️ ${bedLabel} in ${notif.roomId} updated (${notif.notes || "no notes"})`);
         }
       });
     });
 }
+  
 window.onload = () => {
   listenToRoomChanges();
   listenToNotifications();
