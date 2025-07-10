@@ -96,6 +96,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
 let isAdmin = localStorage.getItem("isAdmin") === "true";
 if (isAdmin) document.addEventListener("DOMContentLoaded", () => document.getElementById("adminActions").style.display = "block");
 
@@ -126,21 +127,58 @@ function logoutAdmin() {
   location.reload();
 }
 
-function loadRooms() {
-  db.collection("rooms").onSnapshot(snapshot => {
-    document.getElementById("rooms").innerHTML = "";
-    snapshot.forEach(doc => {
-      const roomId = doc.id;
-      const data = doc.data();
-      db.collection("rooms").doc(roomId).collection("beds").onSnapshot(bedSnap => {
-        const beds = [];
-        bedSnap.forEach(b => beds.push({ id: b.id, ...b.data() }));
-        renderRoom(roomId, data.description, beds);
-      });
-    });
+function renderRoom(name, desc, beds) {
+  const existingDom = document.querySelector(`.room[data-id="${name}"]`);
+  if (existingDom) existingDom.remove();
+
+  const div = document.createElement("div");
+  div.className = "room";
+  div.setAttribute("data-id", name);
+
+  const occupied = beds.filter(b => b.notes).length;
+  div.innerHTML = `
+    <div class="room-header" onclick="toggleRoom(this)">
+      <span>${name}</span>
+      <span class="toggle-icon">➕</span>
+    </div>
+    <div class="room-content">
+      <p>${desc || ''}</p>
+      <p><strong>${beds.length}</strong> beds total — <strong>${occupied}</strong> occupied</p>
+    </div>
+  `;
+  const content = div.querySelector(".room-content");
+  beds.forEach((bed, index) => {
+    const bedDiv = document.createElement("div");
+    bedDiv.className = "bed";
+    bedDiv.style.borderLeftColor = bed.color || "#ccc";
+    bedDiv.innerHTML = `
+      ${isAdmin ? `<span onclick="removeBed('${name}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
+      <strong>Bed ${index + 1}</strong>
+      <input value="${bed.status}" readonly disabled />
+      <input value="${bed.notes}" placeholder="Notes" oninput="noteChanged(this)">
+      <select onchange="colorChanged(this)">
+        <option value="">None</option>
+        <option value="green" ${bed.color === "green" ? 'selected' : ''}>Green</option>
+        <option value="yellow" ${bed.color === "yellow" ? 'selected' : ''}>Yellow</option>
+        <option value="red" ${bed.color === "red" ? 'selected' : ''}>Red</option>
+      </select>
+      <button onclick="saveBed('${name}', '${bed.id}', this)">💾 Save</button>
+      <button onclick="clearBed('${name}', '${bed.id}', this)">❌ Clear</button>
+    `;
+    content.appendChild(bedDiv);
   });
+  if (isAdmin) {
+    const btnBox = document.createElement("div");
+    btnBox.className = "admin-buttons";
+    const addBtn = document.createElement("button");
+    addBtn.textContent = "➕ Add Bed";
+    addBtn.onclick = () => addBed(name);
+    btnBox.appendChild(addBtn);
+    content.appendChild(btnBox);
+  }
+  document.getElementById("rooms").appendChild(div);
 }
-  
+
 function toggleRoom(headerEl) {
   const content = headerEl.nextElementSibling;
   const icon = headerEl.querySelector(".toggle-icon");
@@ -156,14 +194,16 @@ function toggleRoom(headerEl) {
 function noteChanged(input) {
   const parent = input.parentElement;
   const status = parent.children[1];
-  const color = parent.children[3];
+  const colorSelect = parent.children[3];
   if (input.value.trim()) {
     status.value = "Occupied";
-    color.value = "red";
-    parent.style.borderLeftColor = "red";
+    if (!colorSelect.value) {
+      colorSelect.value = "red";
+      parent.style.borderLeftColor = "red";
+    }
   } else {
     status.value = "Empty";
-    color.value = "green";
+    colorSelect.value = "green";
     parent.style.borderLeftColor = "green";
   }
 }
@@ -187,9 +227,7 @@ function clearBed(roomId, bedId) {
     status: "Empty", 
     notes: "", 
     color: "green" 
-  }).then(() => {
-    showToast("✅ Bed cleared!");
-  });
+  }).then(() => toast("✅ Bed cleared!"));
 }
 
 function addRoom() {
@@ -239,26 +277,12 @@ function addBed(roomName) {
     return roomRef.update({ beds_count: currentCount + 1 });
   }).then(() => toast("✅ Bed added"));
 }
-  
+
 function listenToRoomChanges() {
-  const roomMap = new Map();  // Track room DOM elements
-
   db.collection("rooms").onSnapshot(snapshot => {
-    // Remove deleted rooms
-    const existingRoomIds = new Set();
-    snapshot.forEach(roomDoc => existingRoomIds.add(roomDoc.id));
-    [...roomMap.keys()].forEach(id => {
-      if (!existingRoomIds.has(id)) {
-        const el = roomMap.get(id);
-        el.remove();
-        roomMap.delete(id);
-      }
-    });
-
     snapshot.forEach(roomDoc => {
       const roomId = roomDoc.id;
       const roomData = roomDoc.data();
-
       db.collection("rooms").doc(roomId).collection("beds")
         .onSnapshot(bedsSnapshot => {
           const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -266,65 +290,9 @@ function listenToRoomChanges() {
         });
     });
   });
-
-  function renderRoom(name, desc, beds) {
-    const existing = roomMap.get(name);
-    const div = existing || document.createElement("div");
-    div.className = "room";
-    div.innerHTML = "";  // Clear previous content
-    roomMap.set(name, div);
-
-    const occupied = beds.filter(b => b.notes).length;
-
-    div.innerHTML = `
-      <div class="room-header" onclick="toggleRoom(this)">
-        <span>${name}</span>
-        <span class="toggle-icon">➕</span>
-      </div>
-      <div class="room-content">
-        <p>${desc || ''}</p>
-        <p><strong>${beds.length}</strong> beds total — <strong>${occupied}</strong> occupied</p>
-      </div>
-    `;
-
-    const content = div.querySelector(".room-content");
-    beds.forEach((bed, index) => {
-      const bedDiv = document.createElement("div");
-      bedDiv.className = "bed";
-      bedDiv.style.borderLeftColor = bed.color || "#ccc";
-      bedDiv.innerHTML = `
-        ${isAdmin ? `<span onclick="removeBed('${name}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
-        <strong>Bed ${index + 1}</strong>
-        <input value="${bed.status}" readonly disabled />
-        <input value="${bed.notes}" placeholder="Notes" oninput="noteChanged(this)">
-        <select onchange="colorChanged(this)">
-          <option value="">None</option>
-          <option value="green" ${bed.color === "green" ? 'selected' : ''}>Green</option>
-          <option value="yellow" ${bed.color === "yellow" ? 'selected' : ''}>Yellow</option>
-          <option value="red" ${bed.color === "red" ? 'selected' : ''}>Red</option>
-        </select>
-        <button onclick="saveBed('${name}', '${bed.id}', this)">💾 Save</button>
-        <button onclick="clearBed('${name}', '${bed.id}', this)">❌ Clear</button>
-      `;
-      content.appendChild(bedDiv);
-    });
-
-    if (isAdmin) {
-      const btnBox = document.createElement("div");
-      btnBox.className = "admin-buttons";
-      const addBtn = document.createElement("button");
-      addBtn.textContent = "➕ Add Bed";
-      addBtn.onclick = () => addBed(name);
-      btnBox.appendChild(addBtn);
-      content.appendChild(btnBox);
-    }
-
-    if (!existing) {
-      document.getElementById("rooms").appendChild(div);
-    }
-  }
 }
-window.onload = () => listenToRoomChanges();
+
+window.onload = listenToRoomChanges;
 </script>
 </body>
 </html>
