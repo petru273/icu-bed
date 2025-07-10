@@ -8,9 +8,23 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 10px; }
-    h1 { text-align: center; font-size: 22px; margin-bottom: 10px; }
-    .room-container { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 10px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .room-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
     .room {
       background: white;
       border: 1px solid #ccc;
@@ -21,8 +35,22 @@
       display: flex;
       flex-direction: column;
     }
-    .room-header { cursor: pointer; background: #eee; padding: 10px; font-weight: bold; border-bottom: 1px solid #ccc; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
-    .room-content { padding: 10px; font-size: 14px; display: none; }
+    .room-header {
+      cursor: pointer;
+      background: #eee;
+      padding: 10px;
+      font-weight: bold;
+      border-bottom: 1px solid #ccc;
+      font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .room-content {
+      padding: 10px;
+      font-size: 14px;
+      display: none;
+    }
     .bed {
       display: flex;
       flex-direction: column;
@@ -32,16 +60,75 @@
       background: #f0f0f0;
       border-radius: 5px;
       position: relative;
+      transition: background-color 0.3s;
     }
-    .bed input, .bed select { margin-top: 5px; padding: 6px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
-    .bed button { margin-top: 5px; font-size: 14px; padding: 6px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: white; }
-    .bed button:hover { background: #0056b3; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 999; }
-    .modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; }
-    .modal input { display: block; margin-bottom: 10px; width: 100%; padding: 8px; }
-    .modal button { margin-top: 10px; padding: 8px; width: 100%; font-size: 16px; border-radius: 4px; border: none; background: #28a745; color: white; }
-    .modal button:hover { background: #218838; }
-    .admin-buttons { display: flex; gap: 5px; flex-direction: column; margin-top: 10px; }
+    .bed.changed {
+      background-color: #fff3cd;
+    }
+    .bed input, .bed select {
+      margin-top: 5px;
+      padding: 6px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .bed button {
+      margin-top: 5px;
+      font-size: 14px;
+      padding: 6px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+    }
+    .bed button:hover {
+      background: #0056b3;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+    }
+    .modal input {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+      padding: 8px;
+    }
+    .modal button {
+      margin-top: 10px;
+      padding: 8px;
+      width: 100%;
+      font-size: 16px;
+      border-radius: 4px;
+      border: none;
+      background: #28a745;
+      color: white;
+    }
+    .modal button:hover {
+      background: #218838;
+    }
+    .admin-buttons {
+      display: flex;
+      gap: 5px;
+      flex-direction: column;
+      margin-top: 10px;
+    }
     #toast {
       position: fixed;
       bottom: 20px;
@@ -53,6 +140,12 @@
       border-radius: 5px;
       display: none;
       z-index: 1000;
+    }
+    @media screen and (max-width: 600px) {
+      .room-container {
+        flex-direction: column;
+        align-items: center;
+      }
     }
   </style>
 </head>
@@ -96,7 +189,6 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
 let isAdmin = localStorage.getItem("isAdmin") === "true";
 if (isAdmin) document.addEventListener("DOMContentLoaded", () => document.getElementById("adminActions").style.display = "block");
 
@@ -127,15 +219,27 @@ function logoutAdmin() {
   location.reload();
 }
 
-function renderRoom(name, desc, beds) {
-  const existingDom = document.querySelector(`.room[data-id="${name}"]`);
-  if (existingDom) existingDom.remove();
+function listenToRoomChanges() {
+  db.collection("rooms").onSnapshot(snapshot => {
+    const allRooms = [];
+    snapshot.forEach(doc => allRooms.push({ id: doc.id, ...doc.data() }));
+    allRooms.sort((a, b) => a.id.localeCompare(b.id));
+    document.getElementById("rooms").innerHTML = "";
 
+    allRooms.forEach(room => {
+      db.collection("rooms").doc(room.id).collection("beds").onSnapshot(bedsSnap => {
+        const beds = [];
+        bedsSnap.forEach(b => beds.push({ id: b.id, ...b.data() }));
+        renderRoom(room.id, room.description, beds);
+      });
+    });
+  });
+}
+
+function renderRoom(name, desc, beds) {
   const div = document.createElement("div");
   div.className = "room";
-  div.setAttribute("data-id", name);
-
-  const occupied = beds.filter(b => b.notes).length;
+  const occupied = beds.filter(b => b.notes?.trim()).length;
   div.innerHTML = `
     <div class="room-header" onclick="toggleRoom(this)">
       <span>${name}</span>
@@ -154,8 +258,8 @@ function renderRoom(name, desc, beds) {
     bedDiv.innerHTML = `
       ${isAdmin ? `<span onclick="removeBed('${name}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
       <strong>Bed ${index + 1}</strong>
-      <input value="${bed.status}" readonly disabled />
-      <input value="${bed.notes}" placeholder="Notes" oninput="noteChanged(this)">
+      <input value="${bed.status || 'Empty'}" readonly disabled />
+      <input value="${bed.notes || ''}" placeholder="Notes" oninput="noteChanged(this)">
       <select onchange="colorChanged(this)">
         <option value="">None</option>
         <option value="green" ${bed.color === "green" ? 'selected' : ''}>Green</option>
@@ -167,6 +271,7 @@ function renderRoom(name, desc, beds) {
     `;
     content.appendChild(bedDiv);
   });
+
   if (isAdmin) {
     const btnBox = document.createElement("div");
     btnBox.className = "admin-buttons";
@@ -176,6 +281,7 @@ function renderRoom(name, desc, beds) {
     btnBox.appendChild(addBtn);
     content.appendChild(btnBox);
   }
+
   document.getElementById("rooms").appendChild(div);
 }
 
@@ -194,21 +300,21 @@ function toggleRoom(headerEl) {
 function noteChanged(input) {
   const parent = input.parentElement;
   const status = parent.children[1];
-  const colorSelect = parent.children[3];
+  const color = parent.children[3];
+  parent.classList.add("changed");
   if (input.value.trim()) {
     status.value = "Occupied";
-    if (!colorSelect.value) {
-      colorSelect.value = "red";
-      parent.style.borderLeftColor = "red";
-    }
+    color.value = "red";
+    parent.style.borderLeftColor = "red";
   } else {
     status.value = "Empty";
-    colorSelect.value = "green";
+    color.value = "green";
     parent.style.borderLeftColor = "green";
   }
 }
 
 function colorChanged(select) {
+  select.parentElement.classList.add("changed");
   select.parentElement.style.borderLeftColor = select.value || "#ccc";
 }
 
@@ -218,7 +324,8 @@ function saveBed(roomId, bedId, btn) {
   const notes = parent.children[2].value;
   const color = parent.children[3].value;
   db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({ status, notes, color })
-    .then(() => toast("✅ Bed saved"));
+    .then(() => toast("✅ Bed saved"))
+    .then(() => parent.classList.remove("changed"));
 }
 
 function clearBed(roomId, bedId) {
@@ -276,20 +383,6 @@ function addBed(roomName) {
     const currentCount = doc.data().beds_count || 0;
     return roomRef.update({ beds_count: currentCount + 1 });
   }).then(() => toast("✅ Bed added"));
-}
-
-function listenToRoomChanges() {
-  db.collection("rooms").onSnapshot(snapshot => {
-    snapshot.forEach(roomDoc => {
-      const roomId = roomDoc.id;
-      const roomData = roomDoc.data();
-      db.collection("rooms").doc(roomId).collection("beds")
-        .onSnapshot(bedsSnapshot => {
-          const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          renderRoom(roomId, roomData.description, beds);
-        });
-    });
-  });
 }
 
 window.onload = listenToRoomChanges;
