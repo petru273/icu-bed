@@ -41,6 +41,9 @@
       <button onclick="addRoom()">➕ Add Room</button>
       <input type="text" id="deleteRoomName" placeholder="Room to delete">
       <button onclick="deleteRoom()">❌ Delete Room</button>
+      <input type="text" id="roomToModify" placeholder="Room name (for bed)">
+      <input type="number" id="bedToDeleteIndex" placeholder="Bed number to delete (1, 2, 3...)">
+      <button onclick="deleteBedByIndex()">❌ Delete Bed by Index</button>
     </div>
     <button onclick="verifyPassword()">Login</button>
     <button onclick="document.getElementById('adminModal').style.display='none'">Close</button>
@@ -62,12 +65,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let isAdmin = false;
-  
-if (localStorage.getItem("isAdmin") === "true") {
-  isAdmin = true;
-}
-  
+let isAdmin = localStorage.getItem("isAdmin") === "true";
+
 function verifyPassword() {
   const input = document.getElementById("adminPassInput").value;
   db.collection("config").doc("admin").get().then(doc => {
@@ -77,17 +76,15 @@ function verifyPassword() {
       document.getElementById("adminActions").style.display = "block";
       document.getElementById("adminModal").style.display = "none";
       location.reload();
-      // alert("✅ Access granted");
-      location.reload();
     } else alert("❌ Wrong password");
   });
 }
-  
+
 function logoutAdmin() {
   localStorage.removeItem("isAdmin");
   location.reload();
 }
-  
+
 function loadRooms() {
   db.collection("rooms").get().then(snapshot => {
     snapshot.forEach(doc => {
@@ -136,10 +133,6 @@ function renderRoom(name, desc, beds) {
     addBtn.textContent = "➕ Add Bed";
     addBtn.onclick = () => addBed(name);
     btnBox.appendChild(addBtn);
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "❌ Remove Last Bed";
-    delBtn.onclick = () => removeLastBed(name);
-    btnBox.appendChild(delBtn);
     content.appendChild(btnBox);
   }
   document.getElementById("rooms").appendChild(div);
@@ -218,21 +211,25 @@ function addBed(roomName) {
   }).then(() => location.reload());
 }
 
-function removeLastBed(roomName) {
-  if (!isAdmin) return alert("Admin only");
-  if (!confirm("Remove the last bed from this room?")) return;
-  const roomRef = db.collection("rooms").doc(roomName);
-  const bedsRef = roomRef.collection("beds");
-  bedsRef.orderBy(firebase.firestore.FieldPath.documentId()).limitToLast(1).get()
+function deleteBedByIndex() {
+  const room = document.getElementById("roomToModify").value.trim();
+  const bedIndex = parseInt(document.getElementById("bedToDeleteIndex").value);
+  if (!room || isNaN(bedIndex) || bedIndex < 1) return alert("❌ Please enter a valid room and bed number (starting from 1).");
+  db.collection("rooms").doc(room).collection("beds").get()
     .then(snapshot => {
-      if (!snapshot.empty) {
-        const lastBedDoc = snapshot.docs[0];
-        return lastBedDoc.ref.delete().then(() => roomRef.get());
-      }
-    }).then(doc => {
-      const currentCount = doc.data().beds_count || 1;
-      return roomRef.update({ beds_count: currentCount - 1 });
-    }).then(() => location.reload());
+      const beds = snapshot.docs;
+      if (bedIndex > beds.length) return alert(`❌ Bed ${bedIndex} does not exist in room ${room}.`);
+      const bedDoc = beds[bedIndex - 1];
+      return bedDoc.ref.delete().then(() => {
+        return db.collection("rooms").doc(room).get().then(doc => {
+          const count = doc.data().beds_count || beds.length;
+          return db.collection("rooms").doc(room).update({ beds_count: count - 1 });
+        });
+      });
+    }).then(() => location.reload()).catch(e => {
+      console.error("Delete failed", e);
+      alert("❌ Failed to delete bed");
+    });
 }
 
 window.onload = loadRooms;
