@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -13,140 +12,327 @@
       font-family: Arial, sans-serif;
       background: #f9f9f9;
       margin: 0;
-      padding: 10px;
+      padding: 0;
     }
     h1 {
       text-align: center;
       font-size: 22px;
-      margin-bottom: 10px;
+      margin: 10px 0 10px 0;
     }
-    .room-container {
+    .layout {
       display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
+      min-height: 100vh;
+      max-width: 1300px;
+      margin: 0 auto;
     }
-    .room {
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      width: 100%;
-      max-width: 350px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    .sidebar {
+      width: 230px;
+      background: #fff;
+      border-left: 1px solid #eee;
       display: flex;
       flex-direction: column;
+      padding: 0 0 20px 0;
+      box-shadow: -2px 0 10px 0 rgba(0,0,0,0.04);
+      z-index: 20;
     }
-    .room-header {
-      cursor: pointer;
-      background: #eee;
-      padding: 10px;
+    .sidebar h2 {
+      font-size: 17px;
       font-weight: bold;
-      border-bottom: 1px solid #ccc;
-      font-size: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      margin: 20px 0 15px 0;
+      text-align: center;
+      letter-spacing: 1px;
+      color: #444;
     }
-    .room-content {
-      padding: 10px;
+    .room-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .room-list button {
+      width: 95%;
+      margin: 4px auto;
+      display: block;
+      padding: 10px 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 7px;
+      background: #f3f3f3;
+      color: #333;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+    .room-list button.selected,
+    .room-list button:hover {
+      background: #cceaff;
+      color: #00619b;
+      font-weight: bold;
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      padding: 20px 12px 32px 12px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .room-view {
+        width: 100%;
+        max-width: 470px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 2px 2px 18px rgba(0,0,0,0.07);
+        border: 1px solid #ececec;
+        padding: 18px 15px;
+        box-sizing: border-box;  /* Added: Ensure padding fits in width */
+        }
+    .room-header-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #0471c4;
+      letter-spacing: 1px;
+    }
+    .room-header-desc {
+      font-size: 15px;
+      margin-bottom: 3px;
+      color: #222;
+    }
+    .room-header-info {
       font-size: 14px;
-      display: none;
+      color: #5a5a5a;
+      margin-bottom: 13px;
     }
     .bed {
-      display: flex;
-      flex-direction: column;
-      border-left: 10px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-      background: #f0f0f0;
-      border-radius: 5px;
-      position: relative;
-      transition: background-color 0.3s;
+        position: relative;
+        border-left: 7px solid #ccc;
+        background: #f3f7fa;
+        border-radius: 9px;
+        margin-bottom: 18px;
+        padding: 14px 16px 13px 18px;
+        transition: background-color 0.28s;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
     .bed.changed {
       background-color: #fff3cd;
     }
-    .bed input, .bed select {
-      margin-top: 5px;
-      padding: 6px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    .bed input,
+    .bed select {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 2px;
     }
+    .bed .remove-bed-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        cursor: pointer;
+        color: #fff;
+        background: #be2c2c;
+        font-weight: bold;
+        border: none;
+        font-size: 17px;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        box-shadow: 0 2px 8px #e3c5c5;
+        transition: background 0.18s, box-shadow 0.15s, transform 0.1s;
+        z-index: 2;
+        outline: none;
+        }
+        .bed .remove-bed-btn:hover,
+        .bed .remove-bed-btn:focus {
+        background: #e84141;
+        box-shadow: 0 4px 16px #ffdadc;
+        transform: scale(1.08);
+        }
     .bed button {
-      margin-top: 5px;
-      font-size: 14px;
-      padding: 6px;
+      margin-top: 8px;
+      font-size: 15px;
+      padding: 7px;
       cursor: pointer;
       border: none;
       border-radius: 4px;
       background: #007bff;
       color: white;
+      margin-right: 8px;
     }
-    .bed button:hover {
-      background: #0056b3;
+    .bed button:last-child {
+      background: #dc3545;
+      margin-right: 0;
     }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 400px;
-      width: 90%;
-    }
-    .modal input {
-      display: block;
-      margin-bottom: 10px;
-      width: 100%;
-      padding: 8px;
-    }
-    .modal button {
-      margin-top: 10px;
-      padding: 8px;
-      width: 100%;
-      font-size: 16px;
-      border-radius: 4px;
-      border: none;
-      background: #28a745;
-      color: white;
-    }
-    .modal button:hover {
-      background: #218838;
+    .bed button:hover { filter: brightness(0.92); }
+    .bed label {
+        font-size: 14px;
+        color: #444;
+        margin-bottom: 1px;
+        margin-top: 0;
+        }
+
+        .bed strong.bed-title {
+        margin-bottom: 5px;
+        font-size: 17px;
+        color: #0471c4;
+        }
+
+        .bed .admin-buttons {
+        margin-top: 10px;
+        }
+    .remove-bed-btn {
+      position:absolute; top:8px; right:10px; cursor:pointer; color:#c00; font-weight:bold; background: none; border: none; font-size: 18px;
     }
     .admin-buttons {
+      margin-top: 8px;
       display: flex;
-      gap: 5px;
-      flex-direction: column;
-      margin-top: 10px;
+      gap: 9px;
     }
+    .modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+.modal-content {
+  background: white;
+  padding: 26px 18px 22px 18px;
+  border-radius: 14px;
+  max-width: 420px;
+  width: 96vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.20);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.admin-buttons button {
+  background: #735bf2;
+  color: #fff;
+}
+.admin-buttons button:hover {
+  background: #4233a3;
+}
+#adminModal button[onclick*='Close'] {
+  background: #f6f6f6;
+  color: #444;
+  border: none;
+  border-radius: 6px;
+  margin-top: 6px;
+  padding: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px #eee;
+  transition: background 0.18s, color 0.18s;
+}
+
+#adminModal button[onclick*='Close']:hover,
+#adminModal button[onclick*='Close']:focus {
+  background: #eaeaea;
+  color: #d11d1d;
+}
+#adminModal h3 {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 21px;
+}
+#adminActions, #nonAdminActions {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+#adminActions input, #adminActions button,
+#nonAdminActions input, #nonAdminActions button {
+  font-size: 15px;
+  padding: 9px;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+  margin: 0;
+}
+#adminActions hr { margin: 9px 0; border: none; border-top: 1px solid #eee; }
+#adminActions button,
+#nonAdminActions button {
+  border: none;
+  font-weight: bold;
+  background: #586af7;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.19s;
+}
+#adminActions button:hover,
+#nonAdminActions button:hover {
+  background: #2743b6;
+}
+#adminActions button[onclick*="deleteRoom"] {
+  background: #dc3545;
+}
+#adminActions button[onclick*="deleteRoom"]:hover {
+  background: #b52c2c;
+}
+#adminActions button[onclick*="Logout"] {
+  background: #ccc;
+  color: #2d2d2d;
+}
+#adminActions button[onclick*="Logout"]:hover {
+  background: #bbb;
+}
+#adminModal button[onclick*='Close'] {
+  background: #ddd;
+  color: #222;
+  margin-top: 8px;
+}
+#adminModal button[onclick*='Close']:hover {
+  background: #bcbcbc;
+}
     #toast {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
+      padding: 11px 22px;
+      border-radius: 6px;
       display: none;
       z-index: 1000;
+      font-size: 16px;
     }
-    @media screen and (max-width: 600px) {
-      .room-container {
-        flex-direction: column;
-        align-items: center;
-      }
+    .mobile-room-select {
+      display: none;
+      width: 100%;
+      padding: 12px 0 6px 0;
+      background: #fff;
+      border-bottom: 1px solid #e2e2e2;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .mobile-room-select select {
+      width: 97%;
+      margin: 0 auto;
+      display: block;
+      font-size: 17px;
+      border-radius: 8px;
+      padding: 10px 6px;
+      border: 1px solid #b4b4b4;
+    }
+    /* Responsive: mobile < 750px */
+    @media screen and (max-width: 750px) {
+      .layout { flex-direction: column-reverse; }
+      .sidebar { display: none; }
+      .main-area { width: 100%; padding: 11px 2px 36px 2px; }
+      .mobile-room-select { display: block; }
+      .room-view { box-shadow: none; border: none; border-radius: 0; padding: 8px 2px; }
     }
   </style>
 </head>
@@ -154,7 +340,7 @@
 
 <h1>🏥 ICU Bed Tracker <button onclick="document.getElementById('adminModal').style.display='flex'">⚙️ Admin Panel</button></h1>
 
-<div id="adminModal" class="modal">
+<div id="adminModal" class="modal" style="display:none">
   <div class="modal-content">
     <h3>Admin Panel</h3>
     <div id="adminActions" style="display:none">
@@ -168,7 +354,7 @@
       <hr />
       <button onclick="logoutAdmin()">Logout</button>
     </div>
-    <div id="nonAdminActions">
+    <div id="nonAdminActions" style="display:none">
       <input type="password" id="adminPassInput" placeholder="Enter Admin Password" />
       <button onclick="verifyPassword()">Login</button>
     </div>
@@ -177,7 +363,17 @@
 </div>
 
 <div id="toast"></div>
-<div class="room-container" id="rooms"></div>
+
+<div class="mobile-room-select" id="mobileRoomSelect" style="display:none;">
+  <select id="mobileRoomDropdown" onchange="selectRoom(this.value)"></select>
+</div>
+<div class="layout">
+  <div class="main-area" id="mainArea"></div>
+  <aside class="sidebar" id="sidebar">
+    <h2>Rooms</h2>
+    <div class="room-list" id="roomList"></div>
+  </aside>
+</div>
 
 <script>
 const firebaseConfig = {
@@ -204,17 +400,29 @@ function toast(msg) {
   const t = document.getElementById("toast");
   t.innerText = msg;
   t.style.display = "block";
-  setTimeout(() => (t.style.display = "none"), 3000);
+  setTimeout(() => (t.style.display = "none"), 3200);
+}
+function updateAdminPanelVisibility() {
+  if (isAdmin) {
+    document.getElementById("adminActions").style.display = "flex";
+    document.getElementById("nonAdminActions").style.display = "none";
+  } else {
+    document.getElementById("adminActions").style.display = "none";
+    document.getElementById("nonAdminActions").style.display = "flex";
+  }
 }
 
+// Call on page load and after login/logout:
+document.addEventListener("DOMContentLoaded", updateAdminPanelVisibility);
+
+// In verifyPassword(), after successful login:
 function verifyPassword() {
   const input = document.getElementById("adminPassInput").value;
   db.collection("config").doc("admin").get().then(doc => {
     if (input === doc.data()?.password) {
       isAdmin = true;
       localStorage.setItem("isAdmin", "true");
-      document.getElementById("adminActions").style.display = "block";
-      document.getElementById("nonAdminActions").style.display = "none";
+      updateAdminPanelVisibility();
       toast("✅ Admin logged in");
     } else {
       alert("❌ Wrong password");
@@ -222,98 +430,152 @@ function verifyPassword() {
   });
 }
 
+// In logoutAdmin():
 function logoutAdmin() {
   localStorage.removeItem("isAdmin");
-  location.reload();
+  isAdmin = false;
+  updateAdminPanelVisibility();
 }
+
+let roomsCache = [];
+let selectedRoomId = null;
+let bedsListeners = {};
 
 function listenToRoomChanges() {
   db.collection("rooms")
-    .orderBy("beds_count") // assuming numeric sort, you can change this if needed
     .onSnapshot(snapshot => {
-      const seen = new Set();
+      roomsCache = [];
       snapshot.forEach(roomDoc => {
         const roomId = roomDoc.id;
         const roomData = roomDoc.data();
-        seen.add(roomId);
-
-        db.collection("rooms").doc(roomId).collection("beds")
-          .onSnapshot(bedsSnapshot => {
-            const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderRoom(roomId, roomData.description, beds);
-          });
+        roomsCache.push({ id: roomId, ...roomData });
       });
 
-      // Cleanup removed rooms
-      const allRoomDivs = document.querySelectorAll(".room");
-      allRoomDivs.forEach(div => {
-        if (!seen.has(div.dataset.roomId)) div.remove();
+      // Sort alphabetically (case-insensitive)
+      roomsCache.sort((a, b) => a.id.localeCompare(b.id, undefined, { sensitivity: 'base' }));
+
+      const roomList = document.getElementById("roomList");
+      roomList.innerHTML = '';
+      let firstRoomId = null;
+
+      roomsCache.forEach(room => {
+        const btn = document.createElement("button");
+        btn.textContent = room.id;
+        btn.onclick = () => selectRoom(room.id);
+        btn.className = "room-btn" + (room.id === selectedRoomId ? " selected" : "");
+        roomList.appendChild(btn);
+        if (!firstRoomId) firstRoomId = room.id;
       });
+
+      // Mobile dropdown
+      updateMobileDropdown();
+
+      // Select current room or first
+      if (!selectedRoomId || !roomsCache.some(r => r.id === selectedRoomId)) {
+        selectedRoomId = firstRoomId;
+      }
+      if (selectedRoomId) {
+        selectRoom(selectedRoomId, true);
+      } else {
+        renderRoomView(null, null, []);
+      }
     });
 }
 
-function renderRoom(roomId, desc, beds) {
-  const container = document.getElementById("rooms");
+function updateMobileDropdown() {
+  const mobileSelectDiv = document.getElementById("mobileRoomSelect");
+  const dropdown = document.getElementById("mobileRoomDropdown");
+  dropdown.innerHTML = "";
+  roomsCache.forEach(room => {
+    const opt = document.createElement("option");
+    opt.value = room.id;
+    opt.textContent = room.id;
+    dropdown.appendChild(opt);
+  });
+  dropdown.value = selectedRoomId || "";
+  // Show/hide based on media query
+  if (window.innerWidth < 750) {
+    mobileSelectDiv.style.display = "block";
+  } else {
+    mobileSelectDiv.style.display = "none";
+  }
+}
+window.addEventListener("resize", updateMobileDropdown);
 
-  // ✅ Create the div FIRST
-  const div = document.createElement("div");
-  div.className = "room";
-  div.id = `room-${roomId}`;
-  div.dataset.roomId = roomId;
-
+function selectRoom(roomId, skipPush) {
+  if (!roomId) return;
+  selectedRoomId = roomId;
+  updateMobileDropdown();
+  document.querySelectorAll(".room-list button").forEach(btn =>
+    btn.classList.toggle("selected", btn.textContent === roomId)
+  );
+  // Unsubscribe old
+  for (let key in bedsListeners) {
+    bedsListeners[key]();
+    delete bedsListeners[key];
+  }
+  // Find room data
+  const room = roomsCache.find(r => r.id === roomId);
+  if (!room) {
+    renderRoomView(null, null, []);
+    return;
+  }
+  bedsListeners[roomId] = db.collection("rooms").doc(roomId).collection("beds")
+    .onSnapshot(bedsSnapshot => {
+      const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderRoomView(roomId, room, beds);
+    });
+}
+function renderRoomView(roomId, roomData, beds) {
+  const main = document.getElementById("mainArea");
+  if (!roomId || !roomData) {
+    main.innerHTML = "<div style='text-align:center;margin-top:40px;color:#666;'>No room selected</div>";
+    return;
+  }
   const occupied = beds.filter(b => b.notes).length;
-
-  div.innerHTML = `
-    <div class="room-header" onclick="toggleRoom(this)">
-      <span>${roomId}</span>
-      <span class="toggle-icon">➕</span>
-    </div>
-    <div class="room-content">
-      <p>${desc || ''}</p>
-      <p><strong>${beds.length}</strong> beds total — <strong>${occupied}</strong> occupied</p>
+  let html = `
+    <div class="room-view">
+      <div class="room-header-title">${roomId}</div>
+      <div class="room-header-desc">${roomData.description || ""}</div>
+      <div class="room-header-info">
+        <strong>${beds.length}</strong> beds — <strong>${occupied}</strong> occupied
+      </div>
+      <div class="beds-area"></div>
     </div>
   `;
-
-  const content = div.querySelector(".room-content");
-  const openRooms = JSON.parse(localStorage.getItem("openRooms") || "[]");
-    if (openRooms.includes(roomId)) {
-    content.style.display = "block";
-    const icon = div.querySelector(".toggle-icon");
-    if (icon) icon.textContent = "➖";
-    }
+  main.innerHTML = html;
+  const bedsArea = main.querySelector(".beds-area");
   beds.forEach((bed, index) => {
     const bedDiv = document.createElement("div");
     bedDiv.className = "bed";
-    bedDiv.style.borderLeftColor = bed.color || "#ccc";
+    bedDiv.style.borderLeftColor = bed.color && bed.color !== "none" ? bed.color : "#ccc";
     bedDiv.innerHTML = `
-    ${isAdmin ? `<span onclick="removeBed('${roomId}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
+      ${isAdmin ? `<button class="remove-bed-btn" onclick="removeBed('${roomId}', '${bed.id}')">&times;</button>` : ""}
     <strong class="bed-title">Bed ${index + 1}</strong>
-    <div class="bed-field">
+      <div style="margin-top:6px">
         <label>Status:</label>
         <input value="${bed.status || 'Empty'}" readonly disabled />
-    </div>
-    <div class="bed-field">
+      </div>
+      <div>
         <label>Notes:</label>
         <input value="${bed.notes || ''}" placeholder="Notes" oninput="noteChanged(this)">
-    </div>
-    <div class="bed-field">
+      </div>
+      <div>
         <label>Color:</label>
         <select onchange="colorChanged(this)">
-        <option value="">None</option>
-        <option value="green" ${bed.color === "green" ? "selected" : ""}>Green</option>
-        <option value="yellow" ${bed.color === "yellow" ? "selected" : ""}>Yellow</option>
-        <option value="red" ${bed.color === "red" ? "selected" : ""}>Red</option>
+          <option value="">None</option>
+          <option value="green" ${bed.color === "green" ? "selected" : ""}>Green</option>
+          <option value="yellow" ${bed.color === "yellow" ? "selected" : ""}>Yellow</option>
+          <option value="red" ${bed.color === "red" ? "selected" : ""}>Red</option>
         </select>
-    </div>
-    <div style="display: flex; gap: 10%; justify-content: center; width: 90%; margin-top: 10px;">
-        <button style="flex: 1;" onclick="saveBed('${roomId}', '${bed.id}', this)">💾 Save</button>
-        <button style="flex: 1; background: #dc3545;" onclick="clearBed('${roomId}', '${bed.id}', this)">❌ Clear</button>
-    </div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 10px;">
+        <button onclick="saveBed('${roomId}', '${bed.id}', this)">💾 Save</button>
+        <button onclick="clearBed('${roomId}', '${bed.id}', this)">❌ Clear</button>
+      </div>
     `;
-
-    content.appendChild(bedDiv);
+    bedsArea.appendChild(bedDiv);
   });
-
   if (isAdmin) {
     const btnBox = document.createElement("div");
     btnBox.className = "admin-buttons";
@@ -321,71 +583,32 @@ function renderRoom(roomId, desc, beds) {
     addBtn.textContent = "➕ Add Bed";
     addBtn.onclick = () => addBed(roomId);
     btnBox.appendChild(addBtn);
-    content.appendChild(btnBox);
-  }
-
-  // ✅ After div is built, insert in correct order
-  const existing = document.getElementById(`room-${roomId}`);
-  if (existing) {
-    existing.replaceWith(div);
-  } else {
-    const rooms = Array.from(container.children);
-    const insertBeforeEl = rooms.find(child =>
-      child.dataset.roomId.localeCompare(roomId, undefined, { sensitivity: 'base' }) > 0
-    );
-    if (insertBeforeEl) {
-      container.insertBefore(div, insertBeforeEl);
-    } else {
-      container.appendChild(div);
-    }
-  }
-}
-
-function toggleRoom(headerEl) {
-  const content = headerEl.nextElementSibling;
-  const icon = headerEl.querySelector(".toggle-icon");
-  const roomId = headerEl.parentElement.dataset.roomId;
-
-  const openRooms = JSON.parse(localStorage.getItem("openRooms") || "[]");
-
-  if (content.style.display === "none" || content.style.display === "") {
-    content.style.display = "block";
-    icon.textContent = "➖";
-    if (!openRooms.includes(roomId)) {
-      openRooms.push(roomId);
-      localStorage.setItem("openRooms", JSON.stringify(openRooms));
-    }
-  } else {
-    content.style.display = "none";
-    icon.textContent = "➕";
-    const updated = openRooms.filter(id => id !== roomId);
-    localStorage.setItem("openRooms", JSON.stringify(updated));
+    bedsArea.appendChild(btnBox);
   }
 }
 
 function noteChanged(input) {
-  const parent = input.parentElement;
-  const statusInput = parent.children[1];
-  const colorSelect = parent.children[3];
-
-  parent.classList.add("changed");
-
+  const bedDiv = input.closest('.bed');
+  bedDiv.classList.add("changed");
+  const statusInput = bedDiv.querySelector("input[readonly]");
+  const colorSelect = bedDiv.querySelector("select");
   if (input.value.trim()) {
     if (statusInput.value === "Empty") statusInput.value = "Occupied";
     if (!colorSelect.value || colorSelect.value === "green") {
       colorSelect.value = "red";
-      parent.style.borderLeftColor = "red";
+      bedDiv.style.borderLeftColor = "red";
     }
   } else {
     statusInput.value = "Empty";
     colorSelect.value = "green";
-    parent.style.borderLeftColor = "green";
+    bedDiv.style.borderLeftColor = "green";
   }
 }
 
 function colorChanged(select) {
-  select.parentElement.classList.add("changed");
-  select.parentElement.style.borderLeftColor = select.value || "#ccc";
+  const bedDiv = select.closest('.bed');
+  bedDiv.classList.add("changed");
+  bedDiv.style.borderLeftColor = select.value || "#ccc";
 }
 
 function addRoom() {
@@ -393,7 +616,6 @@ function addRoom() {
   const desc = document.getElementById("newRoomDesc").value.trim();
   const count = parseInt(document.getElementById("newRoomBeds").value);
   if (!name || !count) return alert("Fill all room fields");
-
   db.collection("rooms").doc(name).set({ description: desc, beds_count: count }).then(() => {
     const promises = [];
     for (let i = 1; i <= count; i++) {
@@ -412,33 +634,21 @@ function addRoom() {
 }
 
 function saveBed(roomId, bedId, btn) {
-  const parent = btn.parentElement;
-  const notes = parent.querySelector("input[placeholder='Notes']").value;
-  const color = parent.querySelector("select").value;
+  const bedDiv = btn.closest('.bed');
+  const notes = bedDiv.querySelector("input[placeholder='Notes']").value;
+  const color = bedDiv.querySelector("select").value;
   const status = notes.trim() ? "Occupied" : "Empty";
-
-  const bedTitle = parent.querySelector("strong")?.innerText || "";
+  const bedTitle = bedDiv.querySelector("strong")?.innerText || "";
   const match = bedTitle.match(/Bed (\d+)/);
   const bedIndex = match ? Number(match[1]) : null;
-
   db.collection("rooms").doc(roomId).collection("beds").doc(bedId).update({
-    status,
-    notes,
-    color
+    status, notes, color
   }).then(() => {
     toast("✅ Bed saved");
-
-    parent.classList.remove("changed");
-    parent.style.borderLeftColor = color || "#ccc";
-
+    bedDiv.classList.remove("changed");
+    bedDiv.style.borderLeftColor = color || "#ccc";
     return db.collection("notifications").add({
-      type: "update",
-      roomId,
-      bedId,
-      bedIndex,
-      notes,
-      color,
-      clientId,
+      type: "update", roomId, bedId, bedIndex, notes, color, clientId,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
   }).catch((err) => {
@@ -449,32 +659,21 @@ function saveBed(roomId, bedId, btn) {
 
 function clearBed(roomId, bedId, btn) {
   if (!confirm("Clear this bed?")) return;
-
-  const parent = btn.parentElement;
-
-  const bedTitle = parent.querySelector("strong")?.innerText || "";
+  const bedDiv = btn.closest('.bed');
+  const bedTitle = bedDiv.querySelector("strong")?.innerText || "";
   const match = bedTitle.match(/Bed (\d+)/);
   const bedIndex = match ? Number(match[1]) : null;
-
   db.collection("rooms").doc(roomId).collection("beds").doc(bedId).update({
-    status: "Empty",
-    notes: "",
-    color: "none"
+    status: "Empty", notes: "", color: "none"
   }).then(() => {
     toast("✅ Bed cleared");
-
-    parent.querySelector("input[placeholder='Notes']").value = "";
-    parent.querySelector("input[readonly]").value = "Empty";
-    parent.querySelector("select").value = "green";
-    parent.style.borderLeftColor = "green";
-    parent.classList.remove("changed");
-
+    bedDiv.querySelector("input[placeholder='Notes']").value = "";
+    bedDiv.querySelector("input[readonly]").value = "Empty";
+    bedDiv.querySelector("select").value = "green";
+    bedDiv.style.borderLeftColor = "green";
+    bedDiv.classList.remove("changed");
     return db.collection("notifications").add({
-      type: "clear",
-      roomId,
-      bedId,
-      bedIndex,
-      clientId,
+      type: "clear", roomId, bedId, bedIndex, clientId,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
   }).catch((err) => {
@@ -524,9 +723,7 @@ function listenToNotifications() {
       snapshot.docChanges().forEach(change => {
         const notif = change.doc.data();
         if (notif.clientId === clientId) return; // Ignore self
-
-        const bedLabel = notif.bedIndex ? `Bed ${notif.bedIndex}` : `Bed`;
-
+        const bedLabel = notif.bedIndex ? `Bed ${notif.bedIndex}` : "Bed";
         if (notif.type === "clear") {
           toast(`🛏️ ${bedLabel} in ${notif.roomId} was cleared`);
         } else if (notif.type === "update") {
@@ -535,11 +732,20 @@ function listenToNotifications() {
       });
     });
 }
-  
+
+window.selectRoom = selectRoom;
+window.noteChanged = noteChanged;
+window.colorChanged = colorChanged;
+window.saveBed = saveBed;
+window.clearBed = clearBed;
+window.addBed = addBed;
+window.removeBed = removeBed;
+
 window.onload = () => {
   listenToRoomChanges();
   listenToNotifications();
 };
+
 </script>
 </body>
 </html>
