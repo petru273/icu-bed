@@ -51,4 +51,37 @@ function getTokenAndSave(registration) {
   });
 }
 
+function sendBedNotification({title, body, roomId, bedIndex, type}) {
+  // Only notify if permission is granted
+  if (Notification.permission === "granted") {
+    // Optional: use a service worker if registered (for best results on Chrome)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then(function(reg) {
+        if (reg) {
+          reg.showNotification(title, {
+            body: body,
+            icon: 'https://cdn-icons-png.flaticon.com/512/196/196594.png', // ICU/hospital icon or any icon
+            data: { roomId, bedIndex, type }
+          });
+        } else {
+          // fallback to direct Notification
+          new Notification(title, {
+            body: body,
+            icon: 'https://cdn-icons-png.flaticon.com/512/196/196594.png'
+          });
+        }
+      });
+    } else {
+      new Notification(title, {
+        body: body,
+        icon: 'https://cdn-icons-png.flaticon.com/512/196/196594.png'
+      });
+    }
+  } else {
+    // Optionally request permission
+    // Notification.requestPermission();
+    // or just do nothing
+  }
+}
+
 window.subscribeForPushNotifications = subscribeForPushNotifications;
