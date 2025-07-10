@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -157,18 +158,18 @@
   <div class="modal-content">
     <h3>Admin Panel</h3>
     <div id="adminActions" style="display:none">
-      <input type="text" id="newRoomName" placeholder="Room name">
-      <input type="text" id="newRoomDesc" placeholder="Room description">
-      <input type="number" id="newRoomBeds" placeholder="Number of beds">
+      <input type="text" id="newRoomName" placeholder="Room name" />
+      <input type="text" id="newRoomDesc" placeholder="Room description" />
+      <input type="number" id="newRoomBeds" placeholder="Number of beds" />
       <button onclick="addRoom()">➕ Add Room</button>
-      <hr>
-      <input type="text" id="deleteRoomName" placeholder="Room to delete">
+      <hr />
+      <input type="text" id="deleteRoomName" placeholder="Room to delete" />
       <button onclick="deleteRoom()">❌ Delete Room</button>
-      <hr>
+      <hr />
       <button onclick="logoutAdmin()">Logout</button>
     </div>
     <div id="nonAdminActions">
-      <input type="password" id="adminPassInput" placeholder="Enter Admin Password">
+      <input type="password" id="adminPassInput" placeholder="Enter Admin Password" />
       <button onclick="verifyPassword()">Login</button>
     </div>
     <button onclick="document.getElementById('adminModal').style.display='none'">Close</button>
@@ -179,31 +180,31 @@
 <div class="room-container" id="rooms"></div>
 
 <script>
-// Generate or load a persistent client ID
-let clientId = localStorage.getItem("clientId");
-if (!clientId) {
-  clientId = Math.random().toString(36).substring(2, 15);
-  localStorage.setItem("clientId", clientId);
-}
-  
 const firebaseConfig = {
   apiKey: "AIzaSyAhoL_pZudfm53_6tuzgoCGsWOagL6AjZ8",
   authDomain: "icubedtracker.firebaseapp.com",
   projectId: "icubedtracker",
-  storageBucket: "icubedtracker.appspot.com",
+  storageBucket: "icubedtracker.firebasestorage.app",
   messagingSenderId: "237624609130",
   appId: "1:237624609130:web:0f39d97d24443907f1bd13"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
 let isAdmin = localStorage.getItem("isAdmin") === "true";
 if (isAdmin) document.addEventListener("DOMContentLoaded", () => document.getElementById("adminActions").style.display = "block");
+
+let clientId = localStorage.getItem("clientId");
+if (!clientId) {
+  clientId = Math.random().toString(36).substring(2, 15);
+  localStorage.setItem("clientId", clientId);
+}
 
 function toast(msg) {
   const t = document.getElementById("toast");
   t.innerText = msg;
   t.style.display = "block";
-  setTimeout(() => t.style.display = "none", 3000);
+  setTimeout(() => (t.style.display = "none"), 3000);
 }
 
 function verifyPassword() {
@@ -228,7 +229,7 @@ function logoutAdmin() {
 
 function listenToRoomChanges() {
   db.collection("rooms")
-    .orderBy("name")
+    .orderBy("beds_count") // assuming numeric sort, you can change this if needed
     .onSnapshot(snapshot => {
       const seen = new Set();
       snapshot.forEach(roomDoc => {
@@ -237,14 +238,13 @@ function listenToRoomChanges() {
         seen.add(roomId);
 
         db.collection("rooms").doc(roomId).collection("beds")
-          .orderBy("created_at", "asc")
           .onSnapshot(bedsSnapshot => {
             const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderRoom(roomId, roomData.description, beds);
           });
       });
 
-      // Remove rooms that no longer exist
+      // Cleanup removed rooms
       const allRoomDivs = document.querySelectorAll(".room");
       allRoomDivs.forEach(div => {
         if (!seen.has(div.dataset.roomId)) div.remove();
@@ -252,21 +252,20 @@ function listenToRoomChanges() {
     });
 }
 
-function renderRoom(name, desc, beds) {
+function renderRoom(roomId, desc, beds) {
   const container = document.getElementById("rooms");
-  const existing = document.getElementById(`room-${name}`);
-  if (existing) existing.remove();
 
+  // ✅ Create the div FIRST
   const div = document.createElement("div");
   div.className = "room";
-  div.id = `room-${name}`;
-  div.dataset.roomId = name;
+  div.id = `room-${roomId}`;
+  div.dataset.roomId = roomId;
 
   const occupied = beds.filter(b => b.notes).length;
 
   div.innerHTML = `
     <div class="room-header" onclick="toggleRoom(this)">
-      <span>${name}</span>
+      <span>${roomId}</span>
       <span class="toggle-icon">➕</span>
     </div>
     <div class="room-content">
@@ -276,12 +275,18 @@ function renderRoom(name, desc, beds) {
   `;
 
   const content = div.querySelector(".room-content");
+  const openRooms = JSON.parse(localStorage.getItem("openRooms") || "[]");
+    if (openRooms.includes(roomId)) {
+    content.style.display = "block";
+    const icon = div.querySelector(".toggle-icon");
+    if (icon) icon.textContent = "➖";
+    }
   beds.forEach((bed, index) => {
     const bedDiv = document.createElement("div");
     bedDiv.className = "bed";
     bedDiv.style.borderLeftColor = bed.color || "#ccc";
     bedDiv.innerHTML = `
-      ${isAdmin ? `<span onclick="removeBed('${name}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
+      ${isAdmin ? `<span onclick="removeBed('${roomId}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
       <strong>Bed ${index + 1}</strong>
       <input value="${bed.status || 'Empty'}" readonly disabled />
       <input value="${bed.notes || ''}" placeholder="Notes" oninput="noteChanged(this)">
@@ -291,8 +296,8 @@ function renderRoom(name, desc, beds) {
         <option value="yellow" ${bed.color === "yellow" ? "selected" : ""}>Yellow</option>
         <option value="red" ${bed.color === "red" ? "selected" : ""}>Red</option>
       </select>
-      <button onclick="saveBed('${name}', '${bed.id}', this)">💾 Save</button>
-      <button onclick="clearBed('${name}', '${bed.id}', this)">❌ Clear</button>
+      <button onclick="saveBed('${roomId}', '${bed.id}', this)">💾 Save</button>
+      <button onclick="clearBed('${roomId}', '${bed.id}', this)">❌ Clear</button>
     `;
     content.appendChild(bedDiv);
   });
@@ -302,23 +307,47 @@ function renderRoom(name, desc, beds) {
     btnBox.className = "admin-buttons";
     const addBtn = document.createElement("button");
     addBtn.textContent = "➕ Add Bed";
-    addBtn.onclick = () => addBed(name);
+    addBtn.onclick = () => addBed(roomId);
     btnBox.appendChild(addBtn);
     content.appendChild(btnBox);
   }
 
-  container.appendChild(div);
+  // ✅ After div is built, insert in correct order
+  const existing = document.getElementById(`room-${roomId}`);
+  if (existing) {
+    existing.replaceWith(div);
+  } else {
+    const rooms = Array.from(container.children);
+    const insertBeforeEl = rooms.find(child =>
+      child.dataset.roomId.localeCompare(roomId, undefined, { sensitivity: 'base' }) > 0
+    );
+    if (insertBeforeEl) {
+      container.insertBefore(div, insertBeforeEl);
+    } else {
+      container.appendChild(div);
+    }
+  }
 }
 
 function toggleRoom(headerEl) {
   const content = headerEl.nextElementSibling;
   const icon = headerEl.querySelector(".toggle-icon");
+  const roomId = headerEl.parentElement.dataset.roomId;
+
+  const openRooms = JSON.parse(localStorage.getItem("openRooms") || "[]");
+
   if (content.style.display === "none" || content.style.display === "") {
     content.style.display = "block";
     icon.textContent = "➖";
+    if (!openRooms.includes(roomId)) {
+      openRooms.push(roomId);
+      localStorage.setItem("openRooms", JSON.stringify(openRooms));
+    }
   } else {
     content.style.display = "none";
     icon.textContent = "➕";
+    const updated = openRooms.filter(id => id !== roomId);
+    localStorage.setItem("openRooms", JSON.stringify(updated));
   }
 }
 
@@ -347,23 +376,48 @@ function colorChanged(select) {
   select.parentElement.style.borderLeftColor = select.value || "#ccc";
 }
 
+function addRoom() {
+  const name = document.getElementById("newRoomName").value.trim();
+  const desc = document.getElementById("newRoomDesc").value.trim();
+  const count = parseInt(document.getElementById("newRoomBeds").value);
+  if (!name || !count) return alert("Fill all room fields");
+
+  db.collection("rooms").doc(name).set({ description: desc, beds_count: count }).then(() => {
+    const promises = [];
+    for (let i = 1; i <= count; i++) {
+      const bedRef = db.collection("rooms").doc(name).collection("beds").doc();
+      promises.push(
+        bedRef.set({
+          status: "Empty",
+          notes: "",
+          color: "none",
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        })
+      );
+    }
+    return Promise.all(promises);
+  }).then(() => toast("✅ Room created"));
+}
+
 function saveBed(roomId, bedId, btn) {
   const parent = btn.parentElement;
   const notes = parent.querySelector("input[placeholder='Notes']").value;
   const color = parent.querySelector("select").value;
   const status = notes.trim() ? "Occupied" : "Empty";
 
-  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({
+  const bedTitle = parent.querySelector("strong")?.innerText || "";
+  const match = bedTitle.match(/Bed (\d+)/);
+  const bedIndex = match ? Number(match[1]) : null;
+
+  db.collection("rooms").doc(roomId).collection("beds").doc(bedId).update({
     status,
     notes,
     color
   }).then(() => {
     toast("✅ Bed saved");
 
-    // Get bed index from UI
-    const bedTitle = parent.querySelector("strong")?.innerText || "";
-    const match = bedTitle.match(/Bed (\d+)/);
-    const bedIndex = match ? Number(match[1]) : null;
+    parent.classList.remove("changed");
+    parent.style.borderLeftColor = color || "#ccc";
 
     return db.collection("notifications").add({
       type: "update",
@@ -375,6 +429,9 @@ function saveBed(roomId, bedId, btn) {
       clientId,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
+  }).catch((err) => {
+    console.error("Error saving bed:", err);
+    toast("❌ Failed to save bed");
   });
 }
 
@@ -382,6 +439,7 @@ function clearBed(roomId, bedId, btn) {
   if (!confirm("Clear this bed?")) return;
 
   const parent = btn.parentElement;
+
   const bedTitle = parent.querySelector("strong")?.innerText || "";
   const match = bedTitle.match(/Bed (\d+)/);
   const bedIndex = match ? Number(match[1]) : null;
@@ -393,6 +451,12 @@ function clearBed(roomId, bedId, btn) {
   }).then(() => {
     toast("✅ Bed cleared");
 
+    parent.querySelector("input[placeholder='Notes']").value = "";
+    parent.querySelector("input[readonly]").value = "Empty";
+    parent.querySelector("select").value = "green";
+    parent.style.borderLeftColor = "green";
+    parent.classList.remove("changed");
+
     return db.collection("notifications").add({
       type: "clear",
       roomId,
@@ -401,22 +465,10 @@ function clearBed(roomId, bedId, btn) {
       clientId,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
+  }).catch((err) => {
+    console.error("Error clearing bed:", err);
+    toast("❌ Failed to clear bed");
   });
-}
-  
-function addRoom() {
-  const name = document.getElementById("newRoomName").value.trim();
-  const desc = document.getElementById("newRoomDesc").value.trim();
-  const count = parseInt(document.getElementById("newRoomBeds").value);
-  if (!name || !count) return alert("Fill all room fields");
-  db.collection("rooms").doc(name).set({ description: desc, beds_count: count }).then(() => {
-    const promises = [];
-    for (let i = 1; i <= count; i++) {
-      const bedRef = db.collection("rooms").doc(name).collection("beds").doc();
-      promises.push(bedRef.set({ status: "Empty", notes: "", color: "green" }));
-    }
-    return Promise.all(promises);
-  }).then(() => toast("✅ Room created"));
 }
 
 function deleteRoom() {
@@ -451,7 +503,7 @@ function addBed(roomName) {
     return roomRef.update({ beds_count: currentCount + 1 });
   }).then(() => toast("✅ Bed added"));
 }
-  
+
 function listenToNotifications() {
   db.collection("notifications")
     .orderBy("timestamp", "desc")
