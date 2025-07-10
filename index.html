@@ -8,7 +8,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
+  <script src="web-push.js"></script>
+  
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -395,6 +396,8 @@ firebase.auth().onAuthStateChanged(function(user) {
     firebase.auth().signInAnonymously().catch(function(error) {
       alert("Failed to sign in anonymously: " + error.message);
     });
+  } else {
+    subscribeForPushNotifications();
   }
 });
 
@@ -660,6 +663,15 @@ function saveBed(roomId, bedId, btn) {
     toast("✅ Bed saved");
     bedDiv.classList.remove("changed");
     bedDiv.style.borderLeftColor = color || "#ccc";
+
+    sendBedNotification({
+        title: "Bed Changed",
+        body: notificationBody(roomId, bedIndex, "update", notes),
+        roomId: roomId,
+        bedIndex: bedIndex,
+        type: "update"
+    });
+
     return db.collection("notifications").add({
       type: "update", roomId, bedId, bedIndex, notes, color, clientId,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -685,6 +697,15 @@ function clearBed(roomId, bedId, btn) {
     bedDiv.querySelector("select").value = "green";
     bedDiv.style.borderLeftColor = "green";
     bedDiv.classList.remove("changed");
+    
+    sendBedNotification({
+        title: "Bed Changed",
+        body: notificationBody(roomId, bedIndex, "clear", ""), // type is "clear", notes is ""
+        roomId: roomId,
+        bedIndex: bedIndex,
+        type: "clear"
+    });
+
     return db.collection("notifications").add({
       type: "clear", roomId, bedId, bedIndex, clientId,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -693,6 +714,19 @@ function clearBed(roomId, bedId, btn) {
     console.error("Error clearing bed:", err);
     toast("❌ Failed to clear bed");
   });
+}
+function notificationBody(roomId, bedIndex, type, notes) {
+    const bedLabel = `Bed ${bedIndex} in ${roomId}`;
+    if (type === "clear") {
+        return `${bedLabel} was cleared.`;
+    } else if (type === "update") {
+        if (notes && notes.trim()) {
+            return `${bedLabel} updated (Note: ${notes})`;
+        } else {
+            return `${bedLabel} updated.`;
+        }
+    }
+    return `${bedLabel} was changed.`;
 }
 
 function deleteRoom() {
