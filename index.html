@@ -48,15 +48,14 @@
       <input type="text" id="newRoomDesc" placeholder="Room description">
       <input type="number" id="newRoomBeds" placeholder="Number of beds">
       <button onclick="addRoom()">➕ Add Room</button>
+      <hr>
       <input type="text" id="deleteRoomName" placeholder="Room to delete">
       <button onclick="deleteRoom()">❌ Delete Room</button>
-      <input type="text" id="roomToModify" placeholder="Room name (for bed)">
-      <input type="number" id="bedToDeleteIndex" placeholder="Bed number to delete (1, 2, 3...)">
-      <button onclick="deleteBedByIndex()">❌ Delete Bed by Index</button>
+      <hr>
+      <button onclick="logoutAdmin()">Logout</button>
     </div>
     <button onclick="verifyPassword()">Login</button>
     <button onclick="document.getElementById('adminModal').style.display='none'">Close</button>
-    <button onclick="logoutAdmin()">Logout</button>
   </div>
 </div>
 
