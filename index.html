@@ -42,7 +42,6 @@
 <div id="adminModal" class="modal">
   <div class="modal-content">
     <h3>Admin Panel</h3>
-    <input type="password" id="adminPassInput" placeholder="Enter Admin Password">
     <div id="adminActions" style="display:none">
       <input type="text" id="newRoomName" placeholder="Room name">
       <input type="text" id="newRoomDesc" placeholder="Room description">
@@ -54,7 +53,10 @@
       <hr>
       <button onclick="logoutAdmin()">Logout</button>
     </div>
-    <button onclick="verifyPassword()">Login</button>
+    <div id="nonAdminActions">
+      <input type="password" id="adminPassInput" placeholder="Enter Admin Password">
+      <button onclick="verifyPassword()">Login</button>
+    </div>
     <button onclick="document.getElementById('adminModal').style.display='none'">Close</button>
   </div>
 </div>
@@ -90,7 +92,11 @@ function verifyPassword() {
       localStorage.setItem("isAdmin", "true");
       document.getElementById("adminActions").style.display = "block";
       document.getElementById("adminModal").style.display = "none";
-    } else alert("❌ Wrong password");
+    } else {
+      document.getElementById("nonAdminActions").style.display = "block";
+      document.getElementById("nonAdminActions").style.display = "none";
+      alert("❌ Wrong password");
+    }
   });
 }
 
