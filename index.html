@@ -88,7 +88,6 @@
 
 <script>
   const API_BASE = "https://script.google.com/macros/s/AKfycbwU3T1A77Hsboyan8-_EHZi1es3d5_1VDHEF5xVmkBtRxOdQ1CxLi_OSwY8urQ5Xa7k0w/exec";
-
   const roomsContainer = document.getElementById("rooms");
 
   window.onload = async () => {
@@ -184,10 +183,16 @@
     fetch(API_BASE, {
       method: "POST",
       body: JSON.stringify({ room, bed_id: bedId, status, notes, background }),
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
+      mode: "cors" // ✅ critical for CORS
     }).then(res => res.text())
       .then(() => {
         btn.innerText = "✅ Saved";
+        setTimeout(() => btn.innerText = "💾 Save", 1500);
+      })
+      .catch(err => {
+        console.error("Save failed:", err);
+        btn.innerText = "❌ Error";
         setTimeout(() => btn.innerText = "💾 Save", 1500);
       });
   }
