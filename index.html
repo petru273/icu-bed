@@ -65,7 +65,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let isAdmin = localStorage.getItem("isAdmin") === "true";
+let isAdmin = false;
+
+if (localStorage.getItem("isAdmin") === "true") {
+  isAdmin = true;
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("adminActions").style.display = "block";
+  });
+}
 
 function verifyPassword() {
   const input = document.getElementById("adminPassInput").value;
@@ -75,7 +82,6 @@ function verifyPassword() {
       localStorage.setItem("isAdmin", "true");
       document.getElementById("adminActions").style.display = "block";
       document.getElementById("adminModal").style.display = "none";
-      location.reload();
     } else alert("❌ Wrong password");
   });
 }
