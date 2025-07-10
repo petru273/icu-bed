@@ -7,6 +7,8 @@
   <link rel="icon" href="data:,">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -376,6 +378,7 @@
 </div>
 
 <script>
+
 const firebaseConfig = {
   apiKey: "AIzaSyAhoL_pZudfm53_6tuzgoCGsWOagL6AjZ8",
   authDomain: "icubedtracker.firebaseapp.com",
@@ -384,7 +387,17 @@ const firebaseConfig = {
   messagingSenderId: "237624609130",
   appId: "1:237624609130:web:0f39d97d24443907f1bd13"
 };
+
 firebase.initializeApp(firebaseConfig);
+
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) {
+    firebase.auth().signInAnonymously().catch(function(error) {
+      alert("Failed to sign in anonymously: " + error.message);
+    });
+  }
+});
+
 const db = firebase.firestore();
 
 let isAdmin = localStorage.getItem("isAdmin") === "true";
