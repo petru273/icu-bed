@@ -5,151 +5,115 @@
   <title>ICU Bed Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:,">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
       background: #f9f9f9;
     }
-
-    h1 {
-      text-align: center;
-    }
-
+    h1 { text-align: center; }
     .room-container {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
       justify-content: center;
     }
-
     .room {
       background: white;
       border: 1px solid #ccc;
       border-radius: 8px;
       width: 300px;
-      flex: 1 1 300px;
       box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
       overflow: hidden;
     }
-
     .room-header {
       cursor: pointer;
       background: #eee;
       padding: 10px;
       font-weight: bold;
-      border-bottom: 1px solid #ccc;
     }
-
     .room-content {
       display: none;
       padding: 10px;
     }
-
-    .room-content p {
-      margin: 4px 0;
-    }
-
     .bed {
       display: flex;
       flex-direction: column;
-      border: 2px solid transparent;
       border-left: 10px solid #ccc;
       padding: 10px;
       margin-bottom: 10px;
       background: #f0f0f0;
       border-radius: 5px;
     }
-
-    .bed input, .bed select {
+    .bed input, .bed select, .bed button {
       margin-top: 5px;
       padding: 4px;
       font-size: 14px;
-    }
-
-    .bed button {
-      margin-top: 5px;
-      font-size: 13px;
-      padding: 5px 8px;
-      cursor: pointer;
-    }
-
-    .error {
-      color: red;
-      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
 <h1>🏥 ICU Bed Tracker</h1>
-
 <div class="room-container" id="rooms"></div>
 
 <script>
-  const API_BASE = "https://script.google.com/macros/s/AKfycbwL6WOF1WXSqf8z9P5IYoVxX2LhUstjclbVBmpwX1eg_awrNhFDl4oDbNDZF9tjUJn08w/exec";
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhoL_pZudfm53_6tuzgoCGsWOagL6AjZ8",
+    authDomain: "icubedtracker.firebaseapp.com",
+    projectId: "icubedtracker",
+    storageBucket: "icubedtracker.firebasestorage.app",
+    messagingSenderId: "237624609130",
+    appId: "1:237624609130:web:0f39d97d24443907f1bd13"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
   const roomsContainer = document.getElementById("rooms");
 
   window.onload = async () => {
-    try {
-      const res = await fetch(`${API_BASE}?list_rooms=true`);
-      const text = await res.text();
-      const json = JSON.parse(text);
-      if (json.rooms && Array.isArray(json.rooms)) {
-        json.rooms.forEach(room => loadRoom(room));
-      } else {
-        console.error("No room list found.");
-      }
-    } catch (err) {
-      console.error("Failed to fetch room list:", err);
-    }
-  };
+    const snapshot = await db.collection("rooms").get();
+    snapshot.forEach(async doc => {
+      const roomId = doc.id;
+      const config = doc.data();
+      const roomDiv = document.createElement("div");
+      roomDiv.className = "room";
 
-  function loadRoom(room) {
-    fetch(`${API_BASE}?room=${encodeURIComponent(room)}`)
-      .then(async res => {
-        const text = await res.text();
-        try {
-          const data = JSON.parse(text);
-          if (data.error) throw new Error(data.error);
-          renderRoom(room, data);
-        } catch (err) {
-          renderRoom(room, { error: err.message });
-        }
-      });
-  }
+      const header = document.createElement("div");
+      header.className = "room-header";
+      header.innerText = roomId;
 
-  function renderRoom(name, data) {
-    const roomDiv = document.createElement("div");
-    roomDiv.className = "room";
+      const content = document.createElement("div");
+      content.className = "room-content";
 
-    const header = document.createElement("div");
-    header.className = "room-header";
-    header.innerText = name;
-    header.onclick = () => {
-      content.style.display = content.style.display === "none" ? "block" : "none";
-    };
+      header.onclick = () => {
+        content.style.display = content.style.display === "none" ? "block" : "none";
+      };
 
-    const content = document.createElement("div");
-    content.className = "room-content";
-    content.style.display = "none"; // collapsed by default
-
-    if (data.error) {
-      content.innerHTML = `<p class="error">${data.error}</p>`;
-    } else {
       content.innerHTML = `
-        <p>${data.config.description || ""}</p>
-        <p><strong>Total Beds:</strong> ${data.config.beds_count}</p>
+        <p>${config.description || ""}</p>
+        <p><strong>Total Beds:</strong> ${config.beds_count}</p>
         <div class="beds"></div>
       `;
 
-      const bedsDiv = content.querySelector(".beds");
-      data.beds.forEach(bed => {
-        const div = document.createElement("div");
-        div.className = "bed";
-        div.style.borderLeftColor = bed.background || "#ccc";
+      roomDiv.appendChild(header);
+      roomDiv.appendChild(content);
+      roomsContainer.appendChild(roomDiv);
 
-        div.innerHTML = `
+      const bedsDiv = content.querySelector(".beds");
+      const bedsSnap = await db.collection("rooms").doc(roomId).collection("beds").get();
+      bedsSnap.forEach(bedDoc => {
+        const bed = bedDoc.data();
+        const bedEl = document.createElement("div");
+        bedEl.className = "bed";
+        bedEl.style.borderLeftColor = bed.background || "#ccc";
+
+        bedEl.innerHTML = `
           <strong>Bed ${bed.bed_id}</strong>
           <input type="text" value="${bed.status || ''}" placeholder="Status" readonly disabled />
           <input type="text" value="${bed.notes || ''}" placeholder="Notes" oninput="handleNoteChange(this)" />
@@ -159,60 +123,48 @@
             <option value="yellow" ${bed.background === 'yellow' ? 'selected' : ''}>Yellow</option>
             <option value="red" ${bed.background === 'red' ? 'selected' : ''}>Red</option>
           </select>
-          <button onclick="saveBed('${name}', ${bed.bed_id}, this)">💾 Save</button>
-          <button onclick="clearBed('${name}', ${bed.bed_id}, this)">❌ Clear</button>
+          <button onclick="saveBed('${roomId}', ${bed.bed_id}, this)">💾 Save</button>
+          <button onclick="clearBed('${roomId}', ${bed.bed_id}, this)">❌ Clear</button>
         `;
 
-        bedsDiv.appendChild(div);
+        bedsDiv.appendChild(bedEl);
       });
-    }
+    });
+  };
 
-    roomDiv.appendChild(header);
-    roomDiv.appendChild(content);
-    roomsContainer.appendChild(roomDiv);
-  }
-
-  function saveBed(room, bedId, btn) {
+  function saveBed(roomId, bedId, btn) {
     const parent = btn.parentElement;
     const status = parent.children[1].value;
     const notes = parent.children[2].value;
     const background = parent.children[3].value;
-
     parent.style.borderLeftColor = background || "#ccc";
 
-    fetch(API_BASE, {
-      method: "POST",
-      body: JSON.stringify({ room, bed_id: bedId, status, notes, background }),
-      headers: { "Content-Type": "application/json" },
-      mode: "cors" // ✅ critical for CORS
-    }).then(res => res.text())
-      .then(() => {
-        btn.innerText = "✅ Saved";
-        setTimeout(() => btn.innerText = "💾 Save", 1500);
-      })
-      .catch(err => {
-        console.error("Save failed:", err);
-        btn.innerText = "❌ Error";
-        setTimeout(() => btn.innerText = "💾 Save", 1500);
-      });
+    db.collection("rooms").doc(roomId).collection("beds").doc(bedId.toString()).set({
+      bed_id: bedId,
+      status,
+      notes,
+      background
+    }).then(() => {
+      btn.innerText = "✅ Saved";
+      setTimeout(() => btn.innerText = "💾 Save", 1500);
+    });
   }
 
-  function clearBed(room, bedId, btn) {
+  function clearBed(roomId, bedId, btn) {
     const parent = btn.parentElement;
-    parent.children[1].value = "Empty"; // status
-    parent.children[2].value = ""; // notes
-    parent.children[3].value = "green"; // background
+    parent.children[1].value = "Empty";
+    parent.children[2].value = "";
+    parent.children[3].value = "green";
     parent.style.borderLeftColor = "green";
-    saveBed(room, bedId, btn);
+    saveBed(roomId, bedId, btn);
   }
 
   function handleNoteChange(input) {
     const parent = input.parentElement;
     const statusInput = parent.children[1];
-    const notesInput = input;
     const select = parent.children[3];
 
-    if (notesInput.value.trim() !== "") {
+    if (input.value.trim() !== "") {
       statusInput.value = "Occupied";
       select.value = "red";
       parent.style.borderLeftColor = "red";
@@ -223,6 +175,5 @@
     }
   }
 </script>
-
 </body>
 </html>
