@@ -99,7 +99,7 @@ function renderRoom(roomName, data) {
   div.querySelector(".room-header").onclick = () => {
     content.style.display = content.style.display === "none" ? "block" : "none";
   };
-  data.beds.forEach((bed, index) => {
+  (data.beds || []).forEach((bed, index) => {
     const bedDiv = document.createElement("div");
     bedDiv.className = "bed";
     bedDiv.style.borderLeftColor = bed.color || "#ccc";
