@@ -14,7 +14,16 @@
     .room { background: white; border: 1px solid #ccc; border-radius: 8px; width: 100%; max-width: 350px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
     .room-header { cursor: pointer; background: #eee; padding: 10px; font-weight: bold; border-bottom: 1px solid #ccc; font-size: 18px; }
     .room-content { display: none; padding: 10px; font-size: 14px; }
-    .bed { display: flex; flex-direction: column; border-left: 10px solid #ccc; padding: 10px; margin-bottom: 10px; background: #f0f0f0; border-radius: 5px; }
+    .bed {
+        display: flex;
+        flex-direction: column;
+        border-left: 10px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: #f0f0f0;
+        border-radius: 5px;
+        position: relative; /* ✅ add this */
+      }
     .bed input, .bed select { margin-top: 5px; padding: 6px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
     .bed button { margin-top: 5px; font-size: 14px; padding: 6px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: white; }
     .bed button:hover { background: #0056b3; }
@@ -118,18 +127,19 @@ function renderRoom(name, desc, beds) {
     bedDiv.className = "bed";
     bedDiv.style.borderLeftColor = bed.color || "#ccc";
     bedDiv.innerHTML = `
-      <strong>Bed ${index + 1}</strong>
-      <input value="${bed.status}" readonly disabled />
-      <input value="${bed.notes}" placeholder="Notes" oninput="noteChanged(this)">
-      <select onchange="colorChanged(this)">
-        <option value="">None</option>
-        <option value="green" ${bed.color === "green" ? 'selected' : ''}>Green</option>
-        <option value="yellow" ${bed.color === "yellow" ? 'selected' : ''}>Yellow</option>
-        <option value="red" ${bed.color === "red" ? 'selected' : ''}>Red</option>
-      </select>
-      <button onclick="saveBed('${name}', '${bed.id}', this)">💾 Save</button>
-      <button onclick="clearBed('${name}', '${bed.id}', this)">❌ Clear</button>
-    `;
+        ${isAdmin ? `<span onclick="removeBed('${name}', '${bed.id}')" style="position:absolute; top:5px; right:10px; cursor:pointer; color:red; font-weight:bold;">❌</span>` : ''}
+        <strong>Bed ${index + 1}</strong>
+        <input value="${bed.status}" readonly disabled />
+        <input value="${bed.notes}" placeholder="Notes" oninput="noteChanged(this)">
+        <select onchange="colorChanged(this)">
+          <option value="">None</option>
+          <option value="green" ${bed.color === "green" ? 'selected' : ''}>Green</option>
+          <option value="yellow" ${bed.color === "yellow" ? 'selected' : ''}>Yellow</option>
+          <option value="red" ${bed.color === "red" ? 'selected' : ''}>Red</option>
+        </select>
+        <button onclick="saveBed('${name}', '${bed.id}', this)">💾 Save</button>
+        <button onclick="clearBed('${name}', '${bed.id}', this)">❌ Clear</button>
+      `;
     content.appendChild(bedDiv);
   });
   if (isAdmin) {
@@ -204,7 +214,20 @@ function deleteRoom() {
     return Promise.all(deletions);
   }).then(() => db.collection("rooms").doc(name).delete()).then(() => location.reload());
 }
-
+  
+function removeBed(roomName, bedId) {
+  if (!isAdmin) return;
+  if (!confirm("Are you sure you want to delete this bed?")) return;
+  const roomRef = db.collection("rooms").doc(roomName);
+  roomRef.collection("beds").doc(bedId).delete()
+    .then(() => roomRef.get())
+    .then(doc => {
+      const currentCount = doc.data().beds_count || 1;
+      return roomRef.update({ beds_count: currentCount - 1 });
+    })
+    .then(() => location.reload());
+}
+  
 function addBed(roomName) {
   if (!isAdmin) return alert("Admin only");
   const roomRef = db.collection("rooms").doc(roomName);
