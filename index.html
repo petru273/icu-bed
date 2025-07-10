@@ -227,23 +227,25 @@ function logoutAdmin() {
 }
 
 function listenToRoomChanges() {
-  db.collection("rooms").onSnapshot(snapshot => {
-    const allRooms = [];
-    snapshot.forEach(doc => allRooms.push({ id: doc.id, ...doc.data() }));
-    allRooms.sort((a, b) => a.id.localeCompare(b.id));
-    document.getElementById("rooms").innerHTML = "";
+  db.collection("rooms").orderBy("name").onSnapshot(snapshot => {
+    snapshot.forEach(roomDoc => {
+      const roomId = roomDoc.id;
+      const roomData = roomDoc.data();
 
-    allRooms.forEach(room => {
-      db.collection("rooms").doc(room.id).collection("beds").onSnapshot(bedsSnap => {
-        const beds = [];
-        bedsSnap.forEach(b => beds.push({ id: b.id, ...b.data() }));
-        renderRoom(room.id, room.description, beds);
-      });
+      db.collection("rooms").doc(roomId).collection("beds")
+        .orderBy("created_at", "asc")
+        .onSnapshot(bedsSnapshot => {
+          const beds = bedsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderRoom(roomId, roomData.description, beds);
+        });
     });
   });
 }
 
 function renderRoom(name, desc, beds) {
+  const existing = document.getElementById(`room-${name}`);
+  if (existing) existing.remove();
+  
   const div = document.createElement("div");
   div.className = "room";
   const occupied = beds.filter(b => b.notes?.trim()).length;
