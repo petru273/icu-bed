@@ -179,6 +179,13 @@
 <div class="room-container" id="rooms"></div>
 
 <script>
+// Generate or load a persistent client ID
+let clientId = localStorage.getItem("clientId");
+if (!clientId) {
+  clientId = Math.random().toString(36).substring(2, 15);
+  localStorage.setItem("clientId", clientId);
+}
+  
 const firebaseConfig = {
   apiKey: "AIzaSyAhoL_pZudfm53_6tuzgoCGsWOagL6AjZ8",
   authDomain: "icubedtracker.firebaseapp.com",
@@ -327,9 +334,20 @@ function saveBed(roomId, bedId, btn) {
   const status = parent.children[1].value;
   const notes = parent.children[2].value;
   const color = parent.children[3].value;
+
   db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({ status, notes, color })
-    .then(() => toast("✅ Bed saved"))
-    .then(() => parent.classList.remove("changed"));
+    .then(() => {
+      toast("✅ Bed saved");
+      return db.collection("notifications").add({
+        type: "update",
+        roomId,
+        bedId,
+        notes,
+        color,
+        clientId,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
 }
 
 function clearBed(roomId, bedId) {
@@ -337,10 +355,18 @@ function clearBed(roomId, bedId) {
   db.collection("rooms").doc(roomId).collection("beds").doc(bedId).set({ 
     status: "Empty", 
     notes: "", 
-    color: "green" 
-  }).then(() => toast("✅ Bed cleared!"));
+    color: "green"
+  }).then(() => {
+    toast("✅ Bed cleared");
+    return db.collection("notifications").add({
+      type: "clear",
+      roomId,
+      bedId,
+      clientId,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
 }
-
 function addRoom() {
   const name = document.getElementById("newRoomName").value.trim();
   const desc = document.getElementById("newRoomDesc").value.trim();
@@ -388,8 +414,28 @@ function addBed(roomName) {
     return roomRef.update({ beds_count: currentCount + 1 });
   }).then(() => toast("✅ Bed added"));
 }
+  
+function listenToNotifications() {
+  db.collection("notifications")
+    .orderBy("timestamp", "desc")
+    .limit(1)
+    .onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(change => {
+        const notif = change.doc.data();
+        if (notif.clientId === clientId) return; // Ignore own notifications
 
-window.onload = listenToRoomChanges;
+        if (notif.type === "clear") {
+          toast(`🛏️ Bed ${notif.bedId} in ${notif.roomId} was cleared.`);
+        } else if (notif.type === "update") {
+          toast(`🛏️ Bed ${notif.bedId} in ${notif.roomId} was updated (${notif.notes || 'no notes'})`);
+        }
+      });
+    });
+}
+window.onload = () => {
+  listenToRoomChanges();
+  listenToNotifications();
+};
 </script>
 </body>
 </html>
