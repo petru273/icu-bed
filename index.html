@@ -23,189 +23,241 @@
   
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      text-align: center;
-      font-size: 22px;
-      margin: 10px 0 10px 0;
-    }
-    .layout {
-      display: flex;
-      min-height: 100vh;
-      max-width: 1300px;
-      margin: 0 auto;
-    }
-    .sidebar {
-      width: 230px;
-      background: #fff;
-      border-left: 1px solid #eee;
-      display: flex;
-      flex-direction: column;
-      padding: 0 0 20px 0;
-      box-shadow: -2px 0 10px 0 rgba(0,0,0,0.04);
-      z-index: 20;
-    }
-    .sidebar h2 {
-      font-size: 17px;
-      font-weight: bold;
-      margin: 20px 0 15px 0;
-      text-align: center;
-      letter-spacing: 1px;
-      color: #444;
-    }
-    .room-list {
-      flex: 1;
-      overflow-y: auto;
-    }
-    .room-list button {
-      width: 95%;
-      margin: 4px auto;
-      display: block;
-      padding: 10px 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 7px;
-      background: #f3f3f3;
-      color: #333;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.18s;
-    }
-    .room-list button.selected,
-    .room-list button:hover {
-      background: #cceaff;
-      color: #00619b;
-      font-weight: bold;
-    }
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  margin: 0;
+  padding: 0;
+}
+.layout {
+  display: flex;
+  min-height: 100vh;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+.sidebar {
+  width: 230px;
+  background: #fff;
+  border-left: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 0 20px 0;
+  box-shadow: -2px 0 10px 0 rgba(0,0,0,0.04);
+  z-index: 20;
+  gap: 6px;
+}
+.sidebar h2 {
+  font-size: 17px;
+  font-weight: bold;
+  margin: 18px 0 13px 0;
+  text-align: center;
+  letter-spacing: 1px;
+  color: #444;
+}
+.room-list {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
+}
+.room-list button {
+  width: 92%;
+  margin: 4px auto;
+  display: block;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 7px;
+  background: #f3f3f3;
+  color: #333;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.room-list button.selected,
+.room-list button:hover {
+  background: #cceaff;
+  color: #00619b;
+  font-weight: bold;
+}
 
-    .main-area {
-      flex: 1;
-      min-width: 0;
-      padding: 20px 12px 32px 12px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
-    .room-view {
-        width: 100%;
-        max-width: 470px;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 2px 2px 18px rgba(0,0,0,0.07);
-        border: 1px solid #ececec;
-        padding: 18px 15px;
-        box-sizing: border-box;  /* Added: Ensure padding fits in width */
-        }
-    .room-header-title {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 6px;
-      color: #0471c4;
-      letter-spacing: 1px;
-    }
-    .room-header-desc {
-      font-size: 15px;
-      margin-bottom: 3px;
-      color: #222;
-    }
-    .room-header-info {
-      font-size: 14px;
-      color: #5a5a5a;
-      margin-bottom: 13px;
-    }
-    .bed {
-        position: relative;
-        border-left: 7px solid #ccc;
-        background: #f3f7fa;
-        border-radius: 9px;
-        margin-bottom: 18px;
-        padding: 14px 16px 13px 18px;
-        transition: background-color 0.28s;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .bed.changed {
-      background-color: #fff3cd;
-    }
-    .bed input,
-    .bed select {
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 2px;
-    }
-    .bed .remove-bed-btn {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        cursor: pointer;
-        color: #fff;
-        background: #be2c2c;
-        font-weight: bold;
-        border: none;
-        font-size: 17px;
-        border-radius: 50%;
-        width: 28px;
-        height: 28px;
-        line-height: 28px;
-        text-align: center;
-        box-shadow: 0 2px 8px #e3c5c5;
-        transition: background 0.18s, box-shadow 0.15s, transform 0.1s;
-        z-index: 2;
-        outline: none;
-        }
-        .bed .remove-bed-btn:hover,
-        .bed .remove-bed-btn:focus {
-        background: #e84141;
-        box-shadow: 0 4px 16px #ffdadc;
-        transform: scale(1.08);
-        }
-    .bed button {
-      margin-top: 8px;
-      font-size: 15px;
-      padding: 7px;
-      cursor: pointer;
-      border: none;
-      border-radius: 4px;
-      background: #007bff;
-      color: white;
-      margin-right: 8px;
-    }
-    .bed button:last-child {
-      background: #dc3545;
-      margin-right: 0;
-    }
-    .bed button:hover { filter: brightness(0.92); }
-    .bed label {
-        font-size: 14px;
-        color: #444;
-        margin-bottom: 1px;
-        margin-top: 0;
-        }
+.main-area {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 12px 32px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.room-view {
+  width: 100%;
+  max-width: 470px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 2px 2px 18px rgba(0,0,0,0.07);
+  border: 1px solid #ececec;
+  padding: 18px 15px;
+  box-sizing: border-box;
+}
+.room-header-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #0471c4;
+  letter-spacing: 1px;
+}
+.room-header-desc {
+  font-size: 15px;
+  margin-bottom: 3px;
+  color: #222;
+}
+.room-header-info {
+  font-size: 14px;
+  color: #5a5a5a;
+  margin-bottom: 13px;
+}
+.bed {
+  position: relative;
+  border-left: 7px solid #ccc;
+  background: #f3f7fa;
+  border-radius: 9px;
+  margin-bottom: 18px;
+  padding: 14px 16px 13px 18px;
+  transition: background-color 0.28s;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bed.changed {
+  background-color: #fff3cd;
+}
+.bed input,
+.bed select {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 2px;
+}
+.bed .remove-bed-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  cursor: pointer;
+  color: #fff;
+  background: #be2c2c;
+  font-weight: bold;
+  border: none;
+  font-size: 17px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  box-shadow: 0 2px 8px #e3c5c5;
+  transition: background 0.18s, box-shadow 0.15s, transform 0.1s;
+  z-index: 2;
+  outline: none;
+}
+.bed .remove-bed-btn:hover,
+.bed .remove-bed-btn:focus {
+  background: #e84141;
+  box-shadow: 0 4px 16px #ffdadc;
+  transform: scale(1.08);
+}
+.bed button {
+  margin-top: 8px;
+  font-size: 15px;
+  padding: 7px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: white;
+  margin-right: 8px;
+}
+.bed button:last-child {
+  background: #dc3545;
+  margin-right: 0;
+}
+.bed button:hover { filter: brightness(0.92); }
+.bed label {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 1px;
+  margin-top: 0;
+}
+.bed strong.bed-title {
+  margin-bottom: 5px;
+  font-size: 17px;
+  color: #0471c4;
+}
+.bed .admin-buttons {
+  margin-top: 10px;
+}
 
-        .bed strong.bed-title {
-        margin-bottom: 5px;
-        font-size: 17px;
-        color: #0471c4;
-        }
+.admin-buttons {
+  margin-top: 8px;
+  display: flex;
+  gap: 9px;
+}
+.admin-buttons button {
+  background: #735bf2;
+  color: #fff;
+}
+.admin-buttons button:hover {
+  background: #4233a3;
+}
 
-        .bed .admin-buttons {
-        margin-top: 10px;
-        }
-    .remove-bed-btn {
-      position:absolute; top:8px; right:10px; cursor:pointer; color:#c00; font-weight:bold; background: none; border: none; font-size: 18px;
-    }
-    .admin-buttons {
-      margin-top: 8px;
-      display: flex;
-      gap: 9px;
-    }
-    .modal {
+/* Admin Panel Button */
+.admin-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(90deg, #586af7 0%, #51bef6 100%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 7px 19px 7px 13px;
+  border-radius: 22px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 16px #e8eaff;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.09s;
+  outline: none;
+  width: 90%;
+  margin: 0 0 14px 0;
+  align-self: center;
+  justify-content: center;
+}
+.admin-btn:hover,
+.admin-btn:focus {
+  background: linear-gradient(90deg, #4151d8 0%, #2aa7d8 100%);
+  box-shadow: 0 4px 24px #b5d9fa;
+  transform: translateY(-2px) scale(1.04);
+}
+.admin-icon {
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+/* Header at top, always centered */
+.app-header {
+  text-align: center;
+  padding: 26px 0 12px 0;
+  margin-bottom: 0;
+  min-height: 44px;
+}
+.logo-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #292150;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Modal for admin panel */
+.modal {
   display: none;
   position: fixed;
   top: 0; left: 0;
@@ -227,33 +279,6 @@
   flex-direction: column;
   gap: 12px;
   align-items: stretch;
-}
-
-.admin-buttons button {
-  background: #735bf2;
-  color: #fff;
-}
-.admin-buttons button:hover {
-  background: #4233a3;
-}
-#adminModal button[onclick*='Close'] {
-  background: #f6f6f6;
-  color: #444;
-  border: none;
-  border-radius: 6px;
-  margin-top: 6px;
-  padding: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 1px 4px #eee;
-  transition: background 0.18s, color 0.18s;
-}
-
-#adminModal button[onclick*='Close']:hover,
-#adminModal button[onclick*='Close']:focus {
-  background: #eaeaea;
-  color: #d11d1d;
 }
 #adminModal h3 {
   text-align: center;
@@ -308,52 +333,113 @@
 #adminModal button[onclick*='Close']:hover {
   background: #bcbcbc;
 }
-    #toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.85);
-      color: white;
-      padding: 11px 22px;
-      border-radius: 6px;
-      display: none;
-      z-index: 1000;
-      font-size: 16px;
-    }
-    .mobile-room-select {
-      display: none;
-      width: 100%;
-      padding: 12px 0 6px 0;
-      background: #fff;
-      border-bottom: 1px solid #e2e2e2;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .mobile-room-select select {
-      width: 97%;
-      margin: 0 auto;
-      display: block;
-      font-size: 17px;
-      border-radius: 8px;
-      padding: 10px 6px;
-      border: 1px solid #b4b4b4;
-    }
-    /* Responsive: mobile < 750px */
-    @media screen and (max-width: 750px) {
-      .layout { flex-direction: column-reverse; }
-      .sidebar { display: none; }
-      .main-area { width: 100%; padding: 11px 2px 36px 2px; }
-      .mobile-room-select { display: block; }
-      .room-view { box-shadow: none; border: none; border-radius: 0; padding: 8px 2px; }
-    }
+
+/* Toast Notification */
+#toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: white;
+  padding: 11px 22px;
+  border-radius: 6px;
+  display: none;
+  z-index: 1000;
+  font-size: 16px;
+}
+
+/* Mobile Dropdown Room Selector */
+.mobile-room-select {
+  display: none;
+  width: 100%;
+  padding: 12px 0 6px 0;
+  background: #fff;
+  border-bottom: 1px solid #e2e2e2;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.mobile-room-select select {
+  width: 97%;
+  margin: 0 auto;
+  display: block;
+  font-size: 17px;
+  border-radius: 8px;
+  padding: 10px 6px;
+  border: 1px solid #b4b4b4;
+}
+
+/* Responsive: mobile < 750px */
+@media screen and (max-width: 750px) {
+  .layout { flex-direction: column-reverse; }
+  .sidebar { display: none; }
+  .main-area { width: 100%; padding: 11px 2px 36px 2px; }
+  .mobile-room-select { display: block; }
+  .room-view { box-shadow: none; border: none; border-radius: 0; padding: 8px 2px; }
+
+  /* Floating admin panel button for mobile */
+  .admin-btn {
+    display: flex !important;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    width: auto;
+    min-width: 130px;
+    z-index: 1200;
+    margin: 0;
+    box-shadow: 0 2px 12px #c3e0f6;
+    padding: 10px 16px 10px 12px;
+    font-size: 15px;
+  }
+}
+.mobile-admin-btn {
+  display: none !important;
+}
+
+@media screen and (max-width: 750px) {
+  /* Hide the admin btn in the (hidden) sidebar */
+  .sidebar .admin-btn { display: none !important; }
+  /* Show the floating admin btn on mobile */
+  .mobile-admin-btn {
+    display: flex !important;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 1200;
+    min-width: 10px;
+    width: auto;
+    box-shadow: 0 2px 12px #c3e0f6;
+    padding: 10px 16px 10px 12px;
+    font-size: 15px;
+  }
+}
+/* Show only the icon inside .mobile-admin-btn on mobile */
+.mobile-admin-btn {
+  min-width: 0;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  font-size: 0;
+}
+.mobile-admin-btn .admin-icon {
+  margin: 0;
+}
   </style>
 </head>
 <body>
 
-<h1>🏥 ICU Bed Tracker <button onclick="document.getElementById('adminModal').style.display='flex'">⚙️ Admin Panel</button></h1>
-
+<div class="app-header">
+  <span class="logo-title">🏥 <b>ICU Bed Tracker</b></span>
+</div>
+<button class="admin-btn mobile-admin-btn" onclick="document.getElementById('adminModal').style.display='flex'">
+  <svg class="admin-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+    <path fill="#fff" d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.43-3.25c.05-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65a.49.49 0 0 0 .12-.63l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.03 7.03 0 0 0-1.7-.98l-.38-2.65A.488.488 0 0 0 13 2h-4a.488.488 0 0 0-.5.42l-.38 2.65c-.6.24-1.17.56-1.7.98l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.63l2.11 1.65c-.05.32-.07.65-.07.98s.02.66.07.98l-2.11 1.65a.49.49 0 0 0-.12.63l2 3.46c.14.24.45.33.7.22l2.49-1c.53.42 1.1.74 1.7.98l.38 2.65c.04.28.28.48.56.48h4c.28 0 .52-.2.56-.48l.38-2.65c.6-.24 1.17-.56 1.7-.98l2.49 1c.25.11.56.02.7-.22l2-3.46a.5.5 0 0 0-.12-.63l-2.11-1.65z"/>
+  </svg>
+</button>
 <div id="adminModal" class="modal" style="display:none">
   <div class="modal-content">
     <h3>Admin Panel</h3>
@@ -383,7 +469,14 @@
 </div>
 <div class="layout">
   <div class="main-area" id="mainArea"></div>
+  
   <aside class="sidebar" id="sidebar">
+    <button class="admin-btn" onclick="document.getElementById('adminModal').style.display='flex'">
+    <svg class="admin-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24">
+      <path fill="#fff" d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.43-3.25c.05-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65a.49.49 0 0 0 .12-.63l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a7.03 7.03 0 0 0-1.7-.98l-.38-2.65A.488.488 0 0 0 13 2h-4a.488.488 0 0 0-.5.42l-.38 2.65c-.6.24-1.17.56-1.7.98l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.63l2.11 1.65c-.05.32-.07.65-.07.98s.02.66.07.98l-2.11 1.65a.49.49 0 0 0-.12.63l2 3.46c.14.24.45.33.7.22l2.49-1c.53.42 1.1.74 1.7.98l.38 2.65c.04.28.28.48.56.48h4c.28 0 .52-.2.56-.48l.38-2.65c.6-.24 1.17-.56 1.7-.98l2.49 1c.25.11.56.02.7-.22l2-3.46a.5.5 0 0 0-.12-.63l-2.11-1.65z"/>
+    </svg>
+    <span>Admin Panel</span>
+  </button>
     <h2>Rooms</h2>
     <div class="room-list" id="roomList"></div>
   </aside>
