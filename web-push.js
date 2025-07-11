@@ -41,8 +41,11 @@ function getTokenAndSave(registration) {
     serviceWorkerRegistration: registration
   }).then((currentToken) => {
     if (currentToken) {
-      console.log("Notification token:", currentToken);
-      // Save token to your Firestore or use as needed
+      // Save to Firestore
+      firebase.firestore().collection('tokens').doc(currentToken).set({
+        token: currentToken,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
     } else {
       console.warn("No registration token available.");
     }
